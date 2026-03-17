@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Precast Steel Calc</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; text-align: center; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
+        input { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: center; }
+        button { width: 85%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        button:active { background-color: #0056b3; }
+        #result { margin-top: 20px; font-size: 22px; font-weight: bold; color: #333; }
+        label { font-weight: bold; display: block; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Pipe Cage Steel Calc</h2>
+    
+    <label>Wire Diameter (inches)</label>
+    <input type="number" id="dia" step="0.001" placeholder="e.g. 0.375">
+    
+    <label>Wire Spacing / Pitch (inches)</label>
+    <input type="number" id="space" step="0.01" placeholder="e.g. 3.0">
+    
+    <button onclick="calculate()">CALCULATE AS</button>
+    
+    <div id="result">As: 0.0000</div>
+</div>
+
+<script>
+function calculate() {
+    // Get values from screen
+    let d = document.getElementById('dia').value;
+    let s = document.getElementById('space').value;
+    
+    if (d > 0 && s > 0) {
+        // Area = (PI * d^2 / 4) * (12 / spacing)
+        let areaSingle = (Math.PI * Math.pow(d, 2)) / 4;
+        let asValue = areaSingle * (12 / s);
+        
+        // Show result rounded to 4 decimals
+        document.getElementById('result').innerHTML = "As: " + asValue.toFixed(4) + " sq. in/ft";
+        document.getElementById('result').style.color = "#007bff";
+    } else {
+        document.getElementById('result').innerHTML = "Enter valid numbers";
+        document.getElementById('result').style.color = "red";
+    }
+}
+</script>
+
+</body>
+</html>
