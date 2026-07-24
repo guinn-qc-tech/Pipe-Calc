@@ -11,6 +11,7 @@
         button:active { background-color: #0056b3; }
         #result { margin-top: 20px; font-size: 22px; font-weight: bold; color: #333; }
         label { font-weight: bold; display: block; margin-top: 10px; }
+        .hint { font-size: 12px; color: #666; font-weight: normal; display: block; margin-top: 2px; }
     </style>
 </head>
 <body>
@@ -19,10 +20,12 @@
     <h2>Pipe Cage Steel Calc</h2>
     
     <label>Wire Diameter (inches)</label>
-    <input type="number" id="dia" step="0.001" placeholder="e.g. 0.375">
+    <span class="hint">Accepts decimals (0.375) or fractions (3/8)</span>
+    <input type="text" id="dia" placeholder="e.g. 0.375 or 3/8">
     
     <label>Wire Spacing / Pitch (inches)</label>
-    <input type="number" id="space" step="0.01" placeholder="e.g. 3.0">
+    <span class="hint">Accepts decimals (3.25) or mixed fractions (3 1/4)</span>
+    <input type="text" id="space" placeholder="e.g. 3.0 or 3 1/4">
     
     <button onclick="calculate()">CALCULATE AS</button>
     
@@ -30,10 +33,37 @@
 </div>
 
 <script>
+// Utility to parse fractions or decimals safely
+function parseMeasurement(val) {
+    if (!val) return 0;
+    val = val.trim();
+    
+    // Handle mixed fractions like "3 1/4"
+    if (val.includes(' ')) {
+        let parts = val.split(' ');
+        let whole = parseFloat(parts[0]);
+        let fracParts = parts[1].split('/');
+        if (fracParts.length === 2) {
+            return whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
+        }
+        return whole;
+    }
+    // Handle pure fractions like "3/8"
+    else if (val.includes('/')) {
+        let parts = val.split('/');
+        return parseFloat(parts[0]) / parseFloat(parts[1]);
+    }
+    // Handle standard decimals like "0.375"
+    return parseFloat(val);
+}
+
 function calculate() {
-    // Get values from screen
-    let d = document.getElementById('dia').value;
-    let s = document.getElementById('space').value;
+    // Get values and convert via the fraction parser
+    let rawDia = document.getElementById('dia').value;
+    let rawSpace = document.getElementById('space').value;
+    
+    let d = parseMeasurement(rawDia);
+    let s = parseMeasurement(rawSpace);
     
     if (d > 0 && s > 0) {
         // Area = (PI * d^2 / 4) * (12 / spacing)
@@ -44,7 +74,7 @@ function calculate() {
         document.getElementById('result').innerHTML = "As: " + asValue.toFixed(4) + " sq. in/ft";
         document.getElementById('result').style.color = "#007bff";
     } else {
-        document.getElementById('result').innerHTML = "Enter valid numbers";
+        document.getElementById('result').innerHTML = "Enter valid numbers or fractions";
         document.getElementById('result').style.color = "red";
     }
 }
