@@ -17,6 +17,7 @@
             --pass-color: #10b981;
             --fail-color: #ef4444;
             --warn-color: #eab308;
+            --weight-color: #38bdf8;
         }
         
         body { 
@@ -29,7 +30,7 @@
             justify-content: center;
         }
 
-        .container { max-width: 900px; w-full: 100%; width: 100%; padding-bottom: 280px; } /* Extra padding for keyboard */
+        .container { max-width: 900px; width: 100%; padding-bottom: 50px; }
 
         /* Typography & Headers */
         h2 { font-size: 14px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; }
@@ -54,25 +55,25 @@
         }
         .toggle-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
 
-        .split-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .split-group { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 20px; }
         .split-container { display: flex; background: var(--bg-card); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color); }
         .split-container .toggle-btn { flex: 1; border: none; background: transparent; padding: 10px; font-size: 14px; box-shadow: none; transform: none; }
         .split-container .toggle-btn.active { background: #374151; color: white; border-radius: 8px; }
 
-        /* Cage Target Toggle */
+        /* 3-Way Cage Target Toggle */
         .cage-target-container { margin-bottom: 20px; display: flex; background: var(--bg-input); border-radius: 12px; padding: 4px; border: 1px solid var(--border-color); }
-        .cage-target-container .toggle-btn { flex: 1; padding: 15px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; border: none; background: transparent; }
+        .cage-target-container .toggle-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border: none; background: transparent; transition: 0.2s; }
         .cage-target-container .toggle-btn.active { background: var(--accent-blue); color: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
         /* Input Grid */
         .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
-        @media (min-width: 600px) { .bento-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 600px) { .bento-grid { grid-template-columns: repeat(3, 1fr); } }
         
         .input-card { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; }
         .input-card label { display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; pointer-events: none; }
         .input-card input {
             width: 80%; background: var(--bg-input); border: 1px solid var(--border-color); color: white;
-            padding: 10px; border-radius: 6px; font-family: monospace; font-size: 16px; outline: none; cursor: pointer;
+            padding: 10px; border-radius: 6px; font-family: monospace; font-size: 16px; outline: none; cursor: pointer; pointer-events: none;
         }
         
         /* Active Input Styling */
@@ -96,7 +97,12 @@
 
         /* Results Output */
         #results-container { display: none; padding: 20px; border-radius: 16px; border: 4px solid; margin-bottom: 30px; }
-        #results-title { text-align: center; font-size: 30px; font-weight: 900; text-transform: uppercase; margin: 0 0 20px 0; }
+        #results-title { text-align: center; font-size: 30px; font-weight: 900; text-transform: uppercase; margin: 0 0 15px 0; }
+        
+        .weight-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--weight-color); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .weight-banner span { display: block; font-size: 12px; font-weight: bold; color: var(--weight-color); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .weight-banner div { font-size: 28px; font-weight: 900; color: white; font-family: monospace; }
+
         .check-item { background: var(--bg-base); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; flex-direction: column; }
         .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .check-law { font-weight: bold; font-size: 13px; text-transform: uppercase; color: #d1d5db; }
@@ -115,27 +121,31 @@
         .modal-desc { background: var(--bg-base); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); color: #d1d5db; line-height: 1.5; }
         .close-btn { width: 100%; padding: 15px; background: var(--bg-input); border: 1px solid var(--border-color); color: white; font-weight: bold; margin-top: 20px; border-radius: 10px; cursor: pointer; }
 
-        /* Custom Keyboard Slide-Up Panel */
-        #custom-keyboard {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--bg-card);
-            border-top: 2px solid var(--border-color);
-            padding: 15px; box-sizing: border-box;
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
-            box-shadow: 0 -10px 25px rgba(0,0,0,0.8);
-            transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
-            z-index: 1000;
+        /* Custom Centered Modal Keyboard */
+        #keyboard-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+            z-index: 999; backdrop-filter: blur(4px); justify-content: center; align-items: center;
         }
-        #custom-keyboard.visible { transform: translateY(0); }
+        #keyboard-overlay.visible { display: flex; }
+        
+        #custom-keyboard {
+            background: var(--bg-card); border: 2px solid var(--accent-blue);
+            padding: 20px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 95%; max-width: 450px;
+        }
+        
         .key-btn {
             background: var(--bg-input); color: white;
             border: 1px solid var(--border-color); border-radius: 10px;
-            padding: 18px 0; font-size: 24px; font-weight: 900; font-family: monospace;
+            padding: 20px 0; font-size: 26px; font-weight: 900; font-family: monospace;
             cursor: pointer; transition: background 0.1s;
         }
         .key-btn:active { background: #4b5563; }
-        .key-action { color: var(--warn-color); font-size: 18px; }
-        .key-done { background: var(--accent-blue); color: white; border-color: var(--accent-blue); font-size: 18px; letter-spacing: 1px; }
+        .key-action { color: var(--warn-color); font-size: 20px; }
+        .key-done { 
+            grid-column: span 4; background: var(--accent-blue); color: white; 
+            border-color: var(--accent-blue); font-size: 22px; letter-spacing: 2px; padding: 15px 0; 
+        }
         .key-done:active { background: var(--accent-blue-hover); }
     </style>
 </head>
@@ -164,22 +174,20 @@
             <button class="toggle-btn active" onclick="selectWall('B')">Wall B</button>
             <button class="toggle-btn" onclick="selectWall('C')">Wall C</button>
         </div>
-        <div class="split-container" id="class-toggles">
-            <button class="toggle-btn" onclick="selectClass('I')">Class I</button>
-            <button class="toggle-btn" onclick="selectClass('II')">Class II</button>
+        <!-- Locked to Class III for baseline processing -->
+        <div class="split-container" id="class-toggles" style="display: none;">
             <button class="toggle-btn active" onclick="selectClass('III')">Class III</button>
-            <button class="toggle-btn" onclick="selectClass('IV')">Class IV</button>
-            <button class="toggle-btn" onclick="selectClass('V')">Class V</button>
         </div>
     </div>
 
-    <!-- Cage Target Toggle -->
+    <!-- 3-Way Cage Target Toggle -->
     <div class="cage-target-container" id="cage-toggles">
-        <button class="toggle-btn active" onclick="selectCage('inner')">Inner / Single Cage</button>
-        <button class="toggle-btn" id="outer-btn" onclick="selectCage('outer')">Outer Cage</button>
+        <button class="toggle-btn active" id="btn-single" onclick="selectCage('single')">SINGLE CAGE</button>
+        <button class="toggle-btn" id="btn-inner" onclick="selectCage('inner')">INNER CAGE</button>
+        <button class="toggle-btn" id="btn-outer" onclick="selectCage('outer')">OUTER CAGE</button>
     </div>
 
-    <!-- Fractional Inputs (Set to readonly to prevent native keyboard) -->
+    <!-- Fractional Inputs -->
     <h2>Fractional Measurements</h2>
     <div class="bento-grid">
         <div class="input-card" id="card-wireDia" onclick="activateKeyboard('wireDia')">
@@ -194,9 +202,10 @@
             <label>Cage OD (Inches)</label>
             <input type="text" id="cageOD" placeholder="0.0" readonly>
         </div>
+        <!-- Re-added Cage Height for Weight Calculation -->
         <div class="input-card" id="card-cageLength" onclick="activateKeyboard('cageLength')">
-            <label>Cage Height</label>
-            <input type="text" id="cageLength" placeholder="0.0" readonly>
+            <label>Cage Height (Inches)</label>
+            <input type="text" id="cageLength" placeholder="e.g. 96" readonly>
         </div>
         <div class="input-card" id="card-vertDia" onclick="activateKeyboard('vertDia')">
             <label>Vert Dia</label>
@@ -209,10 +218,6 @@
         <div class="input-card" id="card-bellOD" onclick="activateKeyboard('bellOD')">
             <label>Bell OD</label>
             <input type="text" id="bellOD" placeholder="Optional" readonly>
-        </div>
-        <div class="input-card" id="card-bellLength" onclick="activateKeyboard('bellLength')">
-            <label>Bell Ht</label>
-            <input type="text" id="bellLength" placeholder="Optional" readonly>
         </div>
     </div>
 
@@ -236,27 +241,29 @@
     </div>
 </div>
 
-<!-- Custom Number & Fraction Keyboard -->
-<div id="custom-keyboard">
-    <button class="key-btn" onclick="handleKey('1')">1</button>
-    <button class="key-btn" onclick="handleKey('2')">2</button>
-    <button class="key-btn" onclick="handleKey('3')">3</button>
-    <button class="key-btn key-action" onclick="handleBackspace()">⌫</button>
+<!-- Custom Centered Keyboard Overlay -->
+<div id="keyboard-overlay">
+    <div id="custom-keyboard">
+        <button class="key-btn" onclick="handleKey('1')">1</button>
+        <button class="key-btn" onclick="handleKey('2')">2</button>
+        <button class="key-btn" onclick="handleKey('3')">3</button>
+        <button class="key-btn key-action" onclick="handleBackspace()">⌫</button>
 
-    <button class="key-btn" onclick="handleKey('4')">4</button>
-    <button class="key-btn" onclick="handleKey('5')">5</button>
-    <button class="key-btn" onclick="handleKey('6')">6</button>
-    <button class="key-btn key-action" onclick="handleClear()">CLR</button>
+        <button class="key-btn" onclick="handleKey('4')">4</button>
+        <button class="key-btn" onclick="handleKey('5')">5</button>
+        <button class="key-btn" onclick="handleKey('6')">6</button>
+        <button class="key-btn key-action" onclick="handleClear()">CLR</button>
 
-    <button class="key-btn" onclick="handleKey('7')">7</button>
-    <button class="key-btn" onclick="handleKey('8')">8</button>
-    <button class="key-btn" onclick="handleKey('9')">9</button>
-    <button class="key-btn key-action" onclick="handleKey(' ')">SPC</button> <!-- Space for fractions -->
+        <button class="key-btn" onclick="handleKey('7')">7</button>
+        <button class="key-btn" onclick="handleKey('8')">8</button>
+        <button class="key-btn" onclick="handleKey('9')">9</button>
+        <button class="key-btn key-action" style="font-size: 16px; font-weight: 900;" onclick="handleKey(' ')">SPC</button> 
 
-    <button class="key-btn" onclick="handleKey('.')">.</button>
-    <button class="key-btn" onclick="handleKey('0')">0</button>
-    <button class="key-btn" onclick="handleKey('/')">/</button>
-    <button class="key-btn key-done" onclick="hideKeyboard()">DONE</button>
+        <button class="key-btn" onclick="handleKey('.')">.</button>
+        <button class="key-btn" onclick="handleKey('0')">0</button>
+        <button class="key-btn" onclick="handleKey('/')">/</button>
+        <button class="key-btn key-done" onclick="hideKeyboard()">DONE</button>
+    </div>
 </div>
 
 <script>
@@ -265,18 +272,68 @@
     // ==========================================
     const PIPE_SIZES = [15, 18, 24, 30, 36, 42, 48, 54, 60, 72];
     
-    // Plant Specific Baseline: ASTM C76 Wall B Class III + Internal Plant Vert Rules
-    const ASTM_C76_BASE = {
-        15: { wallB_thickness: 2.25, inner_As: 0.07, outer_As: null, min_vertical: 12 },
-        18: { wallB_thickness: 2.50, inner_As: 0.07, outer_As: null, min_vertical: 12 },
-        24: { wallB_thickness: 3.00, inner_As: 0.07, outer_As: null, min_vertical: 12 },
-        30: { wallB_thickness: 3.50, inner_As: 0.18, outer_As: null, min_vertical: 12 },
-        36: { wallB_thickness: 4.00, inner_As: 0.19, outer_As: 0.10, min_vertical: 12 },
-        42: { wallB_thickness: 4.50, inner_As: 0.23, outer_As: 0.14, min_vertical: 24 },
-        48: { wallB_thickness: 5.00, inner_As: 0.24, outer_As: 0.14, min_vertical: 24 },
-        54: { wallB_thickness: 5.50, inner_As: 0.29, outer_As: 0.17, min_vertical: 24 },
-        60: { wallB_thickness: 6.00, inner_As: 0.38, outer_As: 0.20, min_vertical: 24 },
-        72: { wallB_thickness: 7.00, inner_As: 0.49, outer_As: 0.29, min_vertical: 24 }
+    // Plant Specific Baseline: ASTM C76 Class III - Walls A, B, C + Internal Plant Vert Rules
+    const ASTM_C76 = {
+        15: { 
+            A: { thk: 1.875, single: 0.07, inner: null, outer: null },
+            B: { thk: 2.25, single: 0.07, inner: null, outer: null },
+            C: { thk: 3.00, single: 0.07, inner: null, outer: null },
+            min_vertical: 12
+        },
+        18: {
+            A: { thk: 2.00, single: 0.07, inner: null, outer: null },
+            B: { thk: 2.50, single: 0.07, inner: null, outer: null },
+            C: { thk: 3.25, single: 0.07, inner: null, outer: null },
+            min_vertical: 12
+        },
+        24: {
+            A: { thk: 2.50, single: 0.17, inner: null, outer: null },
+            B: { thk: 3.00, single: 0.07, inner: null, outer: null },
+            C: { thk: 3.75, single: 0.07, inner: null, outer: null },
+            min_vertical: 12
+        },
+        30: {
+            A: { thk: 2.875, single: 0.19, inner: null, outer: null },
+            B: { thk: 3.50, single: 0.18, inner: null, outer: null },
+            C: { thk: 4.25, single: null, inner: 0.10, outer: 0.08 },
+            min_vertical: 12
+        },
+        36: {
+            A: { thk: 3.00, single: null, inner: 0.13, outer: 0.21 },
+            B: { thk: 4.00, single: null, inner: 0.19, outer: 0.10 },
+            C: { thk: 4.75, single: null, inner: 0.07, outer: 0.08 },
+            min_vertical: 12
+        },
+        42: {
+            A: { thk: 3.50, single: null, inner: 0.25, outer: 0.15 },
+            B: { thk: 4.50, single: null, inner: 0.21, outer: 0.13 },
+            C: { thk: 5.25, single: null, inner: 0.13, outer: 0.12 }, 
+            min_vertical: 24
+        },
+        48: {
+            A: { thk: 4.00, single: null, inner: 0.32, outer: 0.19 },
+            B: { thk: 5.00, single: null, inner: 0.24, outer: 0.14 },
+            C: { thk: 5.75, single: null, inner: 0.18, outer: 0.16 },
+            min_vertical: 24
+        },
+        54: {
+            A: { thk: 4.50, single: null, inner: 0.38, outer: 0.23 },
+            B: { thk: 5.50, single: null, inner: 0.29, outer: 0.17 }, 
+            C: { thk: 6.25, single: null, inner: 0.21, outer: 0.23 },
+            min_vertical: 24
+        },
+        60: {
+            A: { thk: 5.00, single: null, inner: 0.44, outer: 0.26 },
+            B: { thk: 6.00, single: null, inner: 0.38, outer: 0.20 },
+            C: { thk: 6.75, single: null, inner: 0.28, outer: 0.25 }, 
+            min_vertical: 24
+        },
+        72: {
+            A: { thk: 6.00, single: null, inner: 0.57, outer: 0.34 },
+            B: { thk: 7.00, single: null, inner: 0.49, outer: 0.29 },
+            C: { thk: 7.75, single: null, inner: 0.36, outer: 0.22 },
+            min_vertical: 24
+        }
     };
 
     const SPECS_DICT = {
@@ -290,7 +347,7 @@
     let selectedSize = 24;
     let selectedWall = 'B';
     let selectedClass = 'III';
-    let activeCage = 'inner'; 
+    let activeCage = 'single'; 
     let activeInputId = null;
 
     // ==========================================
@@ -305,14 +362,8 @@
             btn.innerText = `${size}"`;
             btn.onclick = () => {
                 selectedSize = size;
-                
-                // Auto-toggle away from outer cage if selecting a size that doesn't support it
-                if (selectedSize < 36 && activeCage === 'outer') {
-                    activeCage = 'inner';
-                }
-                
+                enforceCageLogic();
                 renderSizes();
-                updateCageToggles();
             };
             container.appendChild(btn);
         });
@@ -322,32 +373,55 @@
         selectedWall = wall;
         const btns = document.getElementById('wall-toggles').children;
         for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(wall) ? 'active' : ''}`;
+        enforceCageLogic();
     }
 
     function selectClass(cls) {
         selectedClass = cls;
-        const btns = document.getElementById('class-toggles').children;
-        for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(cls) ? 'active' : ''}`;
     }
 
     function selectCage(cageType) {
-        if (cageType === 'outer' && selectedSize < 36) return;
+        const reqs = ASTM_C76[selectedSize][selectedWall];
+        
+        if (cageType === 'single' && reqs.single === null) return;
+        if ((cageType === 'inner' || cageType === 'outer') && reqs.inner === null) return;
+        
         activeCage = cageType;
         updateCageToggles();
     }
 
-    function updateCageToggles() {
-        const btns = document.getElementById('cage-toggles').children;
-        btns[0].className = `toggle-btn ${activeCage === 'inner' ? 'active' : ''}`;
+    function enforceCageLogic() {
+        const reqs = ASTM_C76[selectedSize][selectedWall];
         
-        const outerBtn = document.getElementById('outer-btn');
-        if (selectedSize < 36) {
-            outerBtn.disabled = true;
-            outerBtn.className = 'toggle-btn';
-        } else {
-            outerBtn.disabled = false;
-            outerBtn.className = `toggle-btn ${activeCage === 'outer' ? 'active' : ''}`;
+        if (reqs.single !== null) {
+            activeCage = 'single';
+        } else if (reqs.single === null && reqs.inner !== null) {
+            if (activeCage === 'single') activeCage = 'inner';
         }
+        
+        updateCageToggles();
+    }
+
+    function updateCageToggles() {
+        const reqs = ASTM_C76[selectedSize][selectedWall];
+        
+        const btnSingle = document.getElementById('btn-single');
+        const btnInner = document.getElementById('btn-inner');
+        const btnOuter = document.getElementById('btn-outer');
+
+        if (reqs.single !== null) {
+            btnSingle.disabled = false;
+            btnInner.disabled = true;
+            btnOuter.disabled = true;
+        } else {
+            btnSingle.disabled = true;
+            btnInner.disabled = false;
+            btnOuter.disabled = false;
+        }
+
+        btnSingle.className = `toggle-btn ${activeCage === 'single' ? 'active' : ''}`;
+        btnInner.className = `toggle-btn ${activeCage === 'inner' ? 'active' : ''}`;
+        btnOuter.className = `toggle-btn ${activeCage === 'outer' ? 'active' : ''}`;
     }
 
     function showSpecModal() {
@@ -366,26 +440,24 @@
     }
 
     // ==========================================
-    // CUSTOM KEYBOARD LOGIC
+    // CUSTOM CENTERED MODAL KEYBOARD
     // ==========================================
     function activateKeyboard(inputId) {
-        // Clear previous active styling
         if (activeInputId) {
             document.getElementById(`card-${activeInputId}`).classList.remove('active-card');
         }
         
         activeInputId = inputId;
         
-        // Add active styling and slide up keyboard
         document.getElementById(`card-${inputId}`).classList.add('active-card');
-        document.getElementById('custom-keyboard').classList.add('visible');
+        document.getElementById('keyboard-overlay').classList.add('visible');
     }
 
     function hideKeyboard() {
         if (activeInputId) {
             document.getElementById(`card-${activeInputId}`).classList.remove('active-card');
         }
-        document.getElementById('custom-keyboard').classList.remove('visible');
+        document.getElementById('keyboard-overlay').classList.remove('visible');
         activeInputId = null;
     }
 
@@ -429,21 +501,17 @@
     // ARBITER VALIDATION ENGINE
     // ==========================================
     function runArbiterValidation() {
-        // Hide keyboard when processing
         hideKeyboard();
-
         console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} | Target: ${activeCage.toUpperCase()} CAGE`);
         
         const d_wire = parseMeasurement(document.getElementById('wireDia').value);
         const s_pitch = parseMeasurement(document.getElementById('pitch').value);
+        const l_cage = parseMeasurement(document.getElementById('cageLength').value);
         const d_vert = parseMeasurement(document.getElementById('vertDia').value);
         const count_vert = parseMeasurement(document.getElementById('vertCount').value);
         const od_cage = parseMeasurement(document.getElementById('cageOD').value);
-        const l_cage = parseMeasurement(document.getElementById('cageLength').value);
         const od_bell = parseMeasurement(document.getElementById('bellOD').value);
         
-        console.log(`[ARBITER] Parsed: d_wire=${d_wire}, s_pitch=${s_pitch}, od_cage=${od_cage}`);
-
         const resultsContainer = document.getElementById('results-container');
         const resultsTitle = document.getElementById('results-title');
         const resultsLog = document.getElementById('results-log');
@@ -451,17 +519,19 @@
         resultsLog.innerHTML = '';
         resultsContainer.style.display = 'block';
 
-        if (d_wire <= 0 || s_pitch <= 0 || od_cage <= 0) {
+        if (d_wire <= 0 || s_pitch <= 0 || od_cage <= 0 || l_cage <= 0) {
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
             resultsTitle.innerText = 'Execution Error';
-            resultsLog.innerHTML = '<div style="color:var(--fail-color); font-family:monospace; text-align:center;">Critical measurements missing. Arbiter cannot execute.</div>';
+            resultsLog.innerHTML = '<div style="color:var(--fail-color); font-family:monospace; text-align:center;">Critical measurements (including Cage Height) missing. Arbiter cannot execute.</div>';
             return;
         }
 
-        const reqs = ASTM_C76_BASE[selectedSize];
-        if (!reqs) {
+        const standard = ASTM_C76[selectedSize][selectedWall];
+        const min_vertical = ASTM_C76[selectedSize].min_vertical;
+
+        if (!standard) {
             resultsLog.innerHTML = '<div style="color:var(--fail-color);">Size parameters outside Arbiter database.</div>';
             return;
         }
@@ -482,13 +552,38 @@
             `;
         };
 
+        // --- CAGE WEIGHT CALCULATOR (Volumetric Density of Steel = 0.2833 lbs/in³) ---
+        const steelDensity = 0.2833; 
+        
+        // 1. Circumferential Wire Weight
+        const circWireArea = Math.PI * Math.pow(d_wire / 2, 2);
+        const cageCircumference = Math.PI * od_cage; // linear inches per wrap
+        const numberOfWraps = l_cage / s_pitch;
+        const totalCircLength = cageCircumference * numberOfWraps; // total linear inches
+        const circWeight = totalCircLength * circWireArea * steelDensity;
+
+        // 2. Vertical Wire Weight
+        const vertWireArea = Math.PI * Math.pow(d_vert / 2, 2);
+        const totalVertLength = l_cage * count_vert; // total linear inches
+        const vertWeight = totalVertLength * vertWireArea * steelDensity;
+
+        // 3. Total
+        const totalEstimatedWeight = circWeight + vertWeight;
+
+        checksHTML += `
+            <div class="weight-banner">
+                <span>Estimated Cage Weight</span>
+                <div>${totalEstimatedWeight.toFixed(1)} LBS</div>
+            </div>
+        `;
+
         // LAW 1: Area of Steel
         const areaSingle = (Math.PI * Math.pow(d_wire, 2)) / 4;
         const actual_As = areaSingle * (12 / s_pitch);
         
-        const target_As = activeCage === 'inner' ? reqs.inner_As : reqs.outer_As;
+        const target_As = standard[activeCage];
         if (!target_As) {
-            resultsLog.innerHTML = `<div style="color:var(--fail-color);">Arbiter Error: ${activeCage.toUpperCase()} cage requirement not defined for ${selectedSize}" pipe.</div>`;
+            resultsLog.innerHTML = `<div style="color:var(--fail-color);">Arbiter Error: ${activeCage.toUpperCase()} cage requirement not defined for ${selectedSize}" Wall ${selectedWall} pipe.</div>`;
             return;
         }
 
@@ -496,15 +591,15 @@
         if (!asPassed) passedAll = false;
         addCheck(`${activeCage} Cage Area Steel (As)`, asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${target_As.toFixed(4)}.`);
 
-        // LAW 2: Clear Cover (Dynamic based on Inner vs Outer)
-        const pipe_OD = selectedSize + (reqs.wallB_thickness * 2);
+        // LAW 2: Clear Cover
+        const pipe_OD = selectedSize + (standard.thk * 2);
         let clear_cover = 0;
         let cover_location = "";
 
-        if (activeCage === 'outer') {
+        if (activeCage === 'outer' || activeCage === 'single') {
             clear_cover = (pipe_OD - od_cage) / 2;
             cover_location = "from outside wall";
-        } else {
+        } else if (activeCage === 'inner') {
             const id_cage = od_cage - (2 * d_wire);
             clear_cover = (id_cage - selectedSize) / 2;
             cover_location = "from inside wall";
@@ -515,9 +610,9 @@
         addCheck(`Structural Clear Cover`, coverPassed ? 'PASS' : 'FAIL', `Calculated cover: ${clear_cover.toFixed(3)}" ${cover_location}. Optimal is ~1.00".`);
 
         // LAW 3: Plant Specific Longitudinal count
-        const vertPassed = count_vert >= reqs.min_vertical;
+        const vertPassed = count_vert >= min_vertical;
         if (!vertPassed) passedAll = false;
-        addCheck("Plant Standard Vertical Wires", vertPassed ? 'PASS' : 'FAIL', `Count: ${count_vert}. Plant minimum required: ${reqs.min_vertical}.`);
+        addCheck("Plant Standard Vertical Wires", vertPassed ? 'PASS' : 'FAIL', `Count: ${count_vert}. Plant minimum required: ${min_vertical}.`);
 
         // LAW 4: Bell Geometry
         if (od_bell > 0) {
@@ -548,7 +643,7 @@
 
     // Boot up
     renderSizes();
-    updateCageToggles();
+    enforceCageLogic();
 </script>
 </body>
 </html>
