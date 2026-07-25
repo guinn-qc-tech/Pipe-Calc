@@ -32,12 +32,18 @@
 
         .container { max-width: 900px; width: 100%; padding-bottom: 50px; }
 
+        /* Language Toggle */
+        .lang-container { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+        .lang-toggle { display: flex; background: var(--bg-card); border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color); }
+        .lang-btn { background: transparent; color: var(--text-muted); border: none; padding: 8px 16px; font-weight: 900; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .lang-btn.active { background: var(--accent-blue); color: white; }
+
         /* Typography & Headers */
         h2 { font-size: 14px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; }
         select {
             width: 100%; padding: 12px; background: var(--bg-card); color: white;
             border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold;
-            text-transform: uppercase; margin-bottom: 15px; font-size: 14px; outline: none;
+            text-transform: uppercase; margin-bottom: 15px; font-size: 14px; outline: none; cursor: pointer;
         }
 
         /* Buttons & Toggles */
@@ -62,7 +68,7 @@
 
         /* 3-Way Cage Target Toggle */
         .cage-target-container { margin-bottom: 20px; display: flex; background: var(--bg-input); border-radius: 12px; padding: 4px; border: 1px solid var(--border-color); }
-        .cage-target-container .toggle-btn { flex: 1; padding: 15px; font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border: none; background: transparent; transition: 0.2s; }
+        .cage-target-container .toggle-btn { flex: 1; padding: 15px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border: none; background: transparent; transition: 0.2s; }
         .cage-target-container .toggle-btn.active { background: var(--accent-blue); color: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
         /* Input Grid */
@@ -95,7 +101,7 @@
 
         /* Results Output */
         #results-container { display: none; padding: 20px; border-radius: 16px; border: 4px solid; margin-bottom: 30px; }
-        #results-title { text-align: center; font-size: 30px; font-weight: 900; text-transform: uppercase; margin: 0 0 15px 0; }
+        #results-title { text-align: center; font-size: 26px; font-weight: 900; text-transform: uppercase; margin: 0 0 15px 0; }
         
         .weight-banner { background: rgba(56, 189, 248, 0.1); border: 1px solid var(--weight-color); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
         .weight-banner span { display: block; font-size: 12px; font-weight: bold; color: var(--weight-color); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
@@ -160,13 +166,21 @@
 
 <div class="container">
     
+    <!-- Language Toggle -->
+    <div class="lang-container">
+        <div class="lang-toggle">
+            <button id="lang-en" class="lang-btn active" onclick="setLanguage('en')">EN</button>
+            <button id="lang-es" class="lang-btn" onclick="setLanguage('es')">ES</button>
+        </div>
+    </div>
+
     <!-- Specs Dropdown -->
     <select id="spec-select" onchange="showSpecModal()">
-        <option value="" selected disabled>📖 VIEW ASTM C76 CAGE SPECS</option>
-        <option value="c76_steel">ASTM C76 - Area Steel (As)</option>
-        <option value="c76_cover">ASTM C76 - Clear Cover</option>
-        <option value="c76_long">ASTM C76 - Longitudinal</option>
-        <option value="joint_geo">Joint Geometry - Bell/Spigot</option>
+        <option value="" selected disabled id="ui-spec-select">📖 VIEW ASTM C76 CAGE SPECS</option>
+        <option value="c76_steel" id="ui-opt-steel">ASTM C76 - Area Steel (As)</option>
+        <option value="c76_cover" id="ui-opt-cover">ASTM C76 - Clear Cover</option>
+        <option value="c76_long" id="ui-opt-long">Plant Standard - Longitudinal</option>
+        <option value="joint_geo" id="ui-opt-joint">Joint Geometry - Bell/Spigot</option>
     </select>
 
     <!-- Size Toggles -->
@@ -177,16 +191,16 @@
     <!-- Wall & Class Toggles -->
     <div class="split-group" style="grid-template-columns: 1fr;">
         <div class="split-container" id="wall-toggles">
-            <button class="toggle-btn" onclick="selectWall('A')">Wall A</button>
-            <button class="toggle-btn active" onclick="selectWall('B')">Wall B</button>
-            <button class="toggle-btn" onclick="selectWall('C')">Wall C</button>
+            <button class="toggle-btn" onclick="selectWall('A')" id="ui-wall-a">Wall A</button>
+            <button class="toggle-btn active" onclick="selectWall('B')" id="ui-wall-b">Wall B</button>
+            <button class="toggle-btn" onclick="selectWall('C')" id="ui-wall-c">Wall C</button>
         </div>
         <div class="split-container" id="class-toggles">
-            <button class="toggle-btn" onclick="selectClass('I')">Class I</button>
-            <button class="toggle-btn" onclick="selectClass('II')">Class II</button>
-            <button class="toggle-btn active" onclick="selectClass('III')">Class III</button>
-            <button class="toggle-btn" onclick="selectClass('IV')">Class IV</button>
-            <button class="toggle-btn" onclick="selectClass('V')">Class V</button>
+            <button class="toggle-btn" onclick="selectClass('I')" id="ui-class-1">Class I</button>
+            <button class="toggle-btn" onclick="selectClass('II')" id="ui-class-2">Class II</button>
+            <button class="toggle-btn active" onclick="selectClass('III')" id="ui-class-3">Class III</button>
+            <button class="toggle-btn" onclick="selectClass('IV')" id="ui-class-4">Class IV</button>
+            <button class="toggle-btn" onclick="selectClass('V')" id="ui-class-5">Class V</button>
         </div>
     </div>
 
@@ -198,44 +212,44 @@
     </div>
 
     <!-- Fractional Inputs -->
-    <h2>Fractional Measurements</h2>
+    <h2 id="ui-measurements-title">Fractional Measurements</h2>
     <div class="bento-grid">
-        <div class="input-card" id="card-wireDia" onclick="activateKeyboard('wireDia', 'Wire Diameter')">
-            <label>Wire Dia (e.g. 3/8)</label>
+        <div class="input-card" id="card-wireDia" onclick="activateKeyboard('wireDia', 'lbl-wire')">
+            <label id="lbl-wire">Wire Dia (e.g. 3/8)</label>
             <input type="text" id="wireDia" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-pitch" onclick="activateKeyboard('pitch', 'Pitch Spacing')">
-            <label>Pitch (e.g. 2 1/2)</label>
+        <div class="input-card" id="card-pitch" onclick="activateKeyboard('pitch', 'lbl-pitch')">
+            <label id="lbl-pitch">Pitch (e.g. 2 1/2)</label>
             <input type="text" id="pitch" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-cageOD" onclick="activateKeyboard('cageOD', 'Cage OD')">
-            <label>Cage OD (Inches)</label>
+        <div class="input-card" id="card-cageOD" onclick="activateKeyboard('cageOD', 'lbl-od')">
+            <label id="lbl-od">Cage OD (Inches)</label>
             <input type="text" id="cageOD" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-cageLength" onclick="activateKeyboard('cageLength', 'Cage Height')">
-            <label>Cage Height (Inches)</label>
+        <div class="input-card" id="card-cageLength" onclick="activateKeyboard('cageLength', 'lbl-height')">
+            <label id="lbl-height">Cage Height (Inches)</label>
             <input type="text" id="cageLength" placeholder="e.g. 96" readonly>
         </div>
-        <div class="input-card" id="card-vertDia" onclick="activateKeyboard('vertDia', 'Vertical Wire Dia')">
-            <label>Vert Dia</label>
+        <div class="input-card" id="card-vertDia" onclick="activateKeyboard('vertDia', 'lbl-vdia')">
+            <label id="lbl-vdia">Vert Dia</label>
             <input type="text" id="vertDia" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-vertCount" onclick="activateKeyboard('vertCount', 'Vertical Wire Count')">
-            <label>Vert Count</label>
+        <div class="input-card" id="card-vertCount" onclick="activateKeyboard('vertCount', 'lbl-vcount')">
+            <label id="lbl-vcount">Vert Count</label>
             <input type="text" id="vertCount" placeholder="0" readonly>
         </div>
-        <div class="input-card" id="card-bellOD" onclick="activateKeyboard('bellOD', 'Bell OD')">
-            <label>Bell OD</label>
-            <input type="text" id="bellOD" placeholder="Optional" readonly>
+        <div class="input-card" id="card-bellOD" onclick="activateKeyboard('bellOD', 'lbl-bellod')">
+            <label id="lbl-bellod">Bell OD</label>
+            <input type="text" id="bellOD" placeholder="" readonly>
         </div>
-        <div class="input-card" id="card-bellLength" onclick="activateKeyboard('bellLength', 'Bell Height')">
-            <label>Bell Ht</label>
-            <input type="text" id="bellLength" placeholder="Optional" readonly>
+        <div class="input-card" id="card-bellLength" onclick="activateKeyboard('bellLength', 'lbl-bellht')">
+            <label id="lbl-bellht">Bell Ht</label>
+            <input type="text" id="bellLength" placeholder="" readonly>
         </div>
     </div>
 
     <!-- Execute -->
-    <button class="execute-btn" onclick="runArbiterValidation()">Run Arbiter Validation</button>
+    <button class="execute-btn" id="ui-run-btn" onclick="runArbiterValidation()">Run Arbiter Validation</button>
 
     <!-- Results -->
     <div id="results-container">
@@ -250,7 +264,7 @@
     <div class="modal-content">
         <h3 class="modal-title" id="modal-title"></h3>
         <div class="modal-desc" id="modal-desc"></div>
-        <button class="close-btn" onclick="closeSpecModal()">CLOSE</button>
+        <button class="close-btn" id="ui-close-btn" onclick="closeSpecModal()">CLOSE</button>
     </div>
 </div>
 
@@ -267,22 +281,22 @@
         <button class="key-btn" onclick="handleKey('1')">1</button>
         <button class="key-btn" onclick="handleKey('2')">2</button>
         <button class="key-btn" onclick="handleKey('3')">3</button>
-        <button class="key-btn key-action" onclick="handleBackspace()">⌫</button>
+        <button class="key-btn key-action" id="kb-del" onclick="handleBackspace()">⌫</button>
 
         <button class="key-btn" onclick="handleKey('4')">4</button>
         <button class="key-btn" onclick="handleKey('5')">5</button>
         <button class="key-btn" onclick="handleKey('6')">6</button>
-        <button class="key-btn key-action" onclick="handleClear()">CLR</button>
+        <button class="key-btn key-action" id="kb-clr" onclick="handleClear()">CLR</button>
 
         <button class="key-btn" onclick="handleKey('7')">7</button>
         <button class="key-btn" onclick="handleKey('8')">8</button>
         <button class="key-btn" onclick="handleKey('9')">9</button>
-        <button class="key-btn key-action" style="font-size: 16px; font-weight: 900;" onclick="handleKey(' ')">SPC</button> 
+        <button class="key-btn key-action" id="kb-spc" style="font-size: 16px; font-weight: 900;" onclick="handleKey(' ')">SPC</button> 
 
         <button class="key-btn" onclick="handleKey('.')">.</button>
         <button class="key-btn" onclick="handleKey('0')">0</button>
         <button class="key-btn" onclick="handleKey('/')">/</button>
-        <button class="key-btn key-done" onclick="hideKeyboard()">DONE</button>
+        <button class="key-btn key-done" id="kb-done" onclick="hideKeyboard()">DONE</button>
     </div>
 </div>
 
@@ -356,12 +370,178 @@
         }
     };
 
-    const SPECS_DICT = {
-        'c76_steel': { title: 'ASTM C76 - Area Steel (As)', desc: 'Governs the minimum square inches of circumferential steel per linear foot of pipe based on D-Load testing.' },
-        'c76_cover': { title: 'ASTM C76 - Clear Cover', desc: 'Mandates minimum concrete cover over the steel reinforcement to prevent corrosion and spalling (Typically 1 inch for Wall B).' },
-        'c76_long': { title: 'Plant Standard - Longitudinal', desc: 'Requires 12 vertical wires for 36" and under, and 24 vertical wires for 42" and up to maintain rigid forms.' },
-        'joint_geo': { title: 'Joint Geometry - Bell/Spigot', desc: 'The cage must not intrude into the engineered bell or spigot joint profiles, maintaining proper gasket seating clearances.' }
+    // ==========================================
+    // TRANSLATION DICTIONARY (EN/ES)
+    // ==========================================
+    let currentLang = 'en';
+    const langDict = {
+        en: {
+            title: "Cage Expert - Arbiter Engine",
+            specSelect: "📖 VIEW ASTM C76 CAGE SPECS",
+            optSteel: "ASTM C76 - Area Steel (As)",
+            optCover: "ASTM C76 - Clear Cover",
+            optLong: "Plant Standard - Longitudinal",
+            optJoint: "Joint Geometry - Bell/Spigot",
+            wallA: "Wall A", wallB: "Wall B", wallC: "Wall C",
+            class1: "Class I", class2: "Class II", class3: "Class III", class4: "Class IV", class5: "Class V",
+            btnSingle: "SINGLE CAGE", btnInner: "INNER CAGE", btnOuter: "OUTER CAGE",
+            measurementsTitle: "Fractional Measurements",
+            lblWire: "Wire Dia (e.g. 3/8)", lblPitch: "Pitch (e.g. 2 1/2)",
+            lblOd: "Cage OD (Inches)", lblHeight: "Cage Height (Inches)",
+            lblVdia: "Vert Dia", lblVcount: "Vert Count",
+            lblBellod: "Bell OD", lblBellht: "Bell Ht",
+            runBtn: "Run Arbiter Validation",
+            closeBtn: "CLOSE",
+            hudLabelBase: "Active Input",
+            kbClr: "CLR", kbSpc: "SPC", kbDone: "DONE",
+            placeholderOpt: "Optional",
+            
+            // Arbiter Outputs
+            errInvalidTitle: "Invalid Selection",
+            errInvalidDesc: "ASTM C76 does not define a requirement for [SIZE]\" Wall [WALL] Class [CLASS].",
+            errExecTitle: "Execution Error",
+            errExecDesc: "Critical measurements (including Cage Height) missing. Arbiter cannot execute.",
+            errSizeDesc: "Size parameters outside Arbiter database.",
+            errCageDesc: "Arbiter Error: [CAGE] cage requirement not defined for [SIZE]\" Wall [WALL] Class [CLASS] pipe.",
+            weightTitle: "Estimated Cage Weight",
+            approvedTitle: "[CAGE] Cage Approved",
+            failedTitle: "[CAGE] Cage Failed",
+            
+            chkAsTitle: "[CAGE] Cage Area Steel (As)",
+            chkAsCalc: "Calculated [ACTUAL] sq.in/ft. Required: [TARGET].",
+            chkCoverTitle: "Structural Clear Cover",
+            chkCoverCalc: "Calculated cover: [COVER]\" [LOC]. Optimal is ~1.00\".",
+            locOut: "from outside wall", locIn: "from inside wall",
+            chkVertTitle: "Plant Standard Vertical Wires",
+            chkVertCalc: "Count: [COUNT]. Plant minimum required: [MIN].",
+            chkBellTitle: "Bell Flare Geometry",
+            chkBellPass: "Flare extension: [EXT]\". Must maintain cover in bell seating.",
+            chkBellWarn: "No bell OD entered. Bypassing joint specification.",
+            
+            c76_steel_title: "ASTM C76 - Area Steel (As)",
+            c76_steel_desc: "Governs the minimum square inches of circumferential steel per linear foot of pipe based on D-Load testing.",
+            c76_cover_title: "ASTM C76 - Clear Cover",
+            c76_cover_desc: "Mandates minimum concrete cover over the steel reinforcement to prevent corrosion and spalling (Typically 1 inch for Wall B).",
+            c76_long_title: "Plant Standard - Longitudinal",
+            c76_long_desc: "Requires 12 vertical wires for 36\" and under, and 24 vertical wires for 42\" and up to maintain rigid forms.",
+            joint_geo_title: "Joint Geometry - Bell/Spigot",
+            joint_geo_desc: "The cage must not intrude into the engineered bell or spigot joint profiles, maintaining proper gasket seating clearances."
+        },
+        es: {
+            title: "Experto en Armaduras - Motor Arbiter",
+            specSelect: "📖 VER ESPECIFICACIONES ASTM C76",
+            optSteel: "ASTM C76 - Área de Acero (As)",
+            optCover: "ASTM C76 - Recubrimiento",
+            optLong: "Estándar de Planta - Longitudinal",
+            optJoint: "Geometría de Junta - Campana/Espiga",
+            wallA: "Pared A", wallB: "Pared B", wallC: "Pared C",
+            class1: "Clase I", class2: "Clase II", class3: "Clase III", class4: "Clase IV", class5: "Clase V",
+            btnSingle: "ARMADURA SIMPLE", btnInner: "ARMADURA INTERIOR", btnOuter: "ARMADURA EXTERIOR",
+            measurementsTitle: "Medidas Fraccionales",
+            lblWire: "Diám. Alambre (ej. 3/8)", lblPitch: "Paso/Espacio (ej. 2 1/2)",
+            lblOd: "DE Armadura (Pulg)", lblHeight: "Altura Armadura (Pulg)",
+            lblVdia: "Diám. Vertical", lblVcount: "Cant. Vertical",
+            lblBellod: "DE Campana", lblBellht: "Altura Campana",
+            runBtn: "Ejecutar Validación Arbiter",
+            closeBtn: "CERRAR",
+            hudLabelBase: "Entrada Activa",
+            kbClr: "BORR", kbSpc: "ESP", kbDone: "LISTO",
+            placeholderOpt: "Opcional",
+            
+            // Arbiter Outputs
+            errInvalidTitle: "Selección Inválida",
+            errInvalidDesc: "ASTM C76 no define un requisito para [SIZE]\" Pared [WALL] Clase [CLASS].",
+            errExecTitle: "Error de Ejecución",
+            errExecDesc: "Faltan medidas críticas (incluyendo Altura de Armadura). Arbiter no puede ejecutar.",
+            errSizeDesc: "Parámetros de tamaño fuera de la base de datos Arbiter.",
+            errCageDesc: "Error Arbiter: requisito de armadura [CAGE] no definido para tubo de [SIZE]\" Pared [WALL] Clase [CLASS].",
+            weightTitle: "Peso Estimado de Armadura",
+            approvedTitle: "Armadura [CAGE] Aprobada",
+            failedTitle: "Armadura [CAGE] Rechazada",
+            
+            chkAsTitle: "Área de Acero (As) Armadura [CAGE]",
+            chkAsCalc: "Calculado [ACTUAL] pulg.cuad/pie. Requerido: [TARGET].",
+            chkCoverTitle: "Recubrimiento Estructural",
+            chkCoverCalc: "Recubrimiento calculado: [COVER]\" [LOC]. Óptimo es ~1.00\".",
+            locOut: "desde pared exterior", locIn: "desde pared interior",
+            chkVertTitle: "Alambres Verticales Estándar",
+            chkVertCalc: "Cantidad: [COUNT]. Mínimo de planta requerido: [MIN].",
+            chkBellTitle: "Geometría de Campana",
+            chkBellPass: "Extensión de campana: [EXT]\". Debe mantener recubrimiento.",
+            chkBellWarn: "No se ingresó DE de campana. Omitiendo especificación.",
+
+            c76_steel_title: "ASTM C76 - Área de Acero (As)",
+            c76_steel_desc: "Rige las pulgadas cuadradas mínimas de acero circunferencial por pie lineal de tubo basándose en la prueba de Carga D.",
+            c76_cover_title: "ASTM C76 - Recubrimiento de Concreto",
+            c76_cover_desc: "Exige un recubrimiento mínimo de concreto sobre el refuerzo para evitar corrosión y desprendimiento (Típicamente 1 pulgada para Pared B).",
+            c76_long_title: "Estándar de Planta - Longitudinal",
+            c76_long_desc: "Requiere 12 alambres verticales para 36\" y menores, y 24 alambres verticales para 42\" y mayores para mantener la rigidez.",
+            joint_geo_title: "Geometría de Junta - Campana/Espiga",
+            joint_geo_desc: "La armadura no debe entrometerse en los perfiles diseñados de la campana o espiga, manteniendo espacio para el empaque."
+        }
     };
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        const d = langDict[lang];
+
+        // Toggle Buttons styling
+        document.getElementById('lang-en').className = `lang-btn ${lang === 'en' ? 'active' : ''}`;
+        document.getElementById('lang-es').className = `lang-btn ${lang === 'es' ? 'active' : ''}`;
+
+        // DOM Updates
+        document.title = d.title;
+        document.getElementById('ui-spec-select').innerText = d.specSelect;
+        document.getElementById('ui-opt-steel').innerText = d.optSteel;
+        document.getElementById('ui-opt-cover').innerText = d.optCover;
+        document.getElementById('ui-opt-long').innerText = d.optLong;
+        document.getElementById('ui-opt-joint').innerText = d.optJoint;
+
+        document.getElementById('ui-wall-a').innerText = d.wallA;
+        document.getElementById('ui-wall-b').innerText = d.wallB;
+        document.getElementById('ui-wall-c').innerText = d.wallC;
+
+        document.getElementById('ui-class-1').innerText = d.class1;
+        document.getElementById('ui-class-2').innerText = d.class2;
+        document.getElementById('ui-class-3').innerText = d.class3;
+        document.getElementById('ui-class-4').innerText = d.class4;
+        document.getElementById('ui-class-5').innerText = d.class5;
+
+        document.getElementById('btn-single').innerText = d.btnSingle;
+        document.getElementById('btn-inner').innerText = d.btnInner;
+        document.getElementById('btn-outer').innerText = d.btnOuter;
+
+        document.getElementById('ui-measurements-title').innerText = d.measurementsTitle;
+        document.getElementById('lbl-wire').innerText = d.lblWire;
+        document.getElementById('lbl-pitch').innerText = d.lblPitch;
+        document.getElementById('lbl-od').innerText = d.lblOd;
+        document.getElementById('lbl-height').innerText = d.lblHeight;
+        document.getElementById('lbl-vdia').innerText = d.lblVdia;
+        document.getElementById('lbl-vcount').innerText = d.lblVcount;
+        document.getElementById('lbl-bellod').innerText = d.lblBellod;
+        document.getElementById('lbl-bellht').innerText = d.lblBellht;
+        
+        document.getElementById('bellOD').placeholder = d.placeholderOpt;
+        document.getElementById('bellLength').placeholder = d.placeholderOpt;
+
+        document.getElementById('ui-run-btn').innerText = d.runBtn;
+        document.getElementById('ui-close-btn').innerText = d.closeBtn;
+
+        document.getElementById('kb-clr').innerText = d.kbClr;
+        document.getElementById('kb-spc').innerText = d.kbSpc;
+        document.getElementById('kb-done').innerText = d.kbDone;
+        
+        // If HUD is active, update its label text
+        if(activeInputId) {
+            let uiLabelId = document.getElementById(`card-${activeInputId}`).getAttribute('onclick').split("'")[3];
+            document.getElementById('keyboard-display-label').innerText = document.getElementById(uiLabelId).innerText;
+        }
+
+        // Re-run Arbiter quietly if there are results visible so they translate
+        if (document.getElementById('results-container').style.display === 'block') {
+            runArbiterValidation();
+        }
+    }
 
     // State Variables
     let selectedSize = 24;
@@ -392,14 +572,28 @@
     function selectWall(wall) {
         selectedWall = wall;
         const btns = document.getElementById('wall-toggles').children;
-        for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(wall) ? 'active' : ''}`;
+        for(let b of btns) {
+            // Must check original english ID substring since text can change language
+            if(b.id === `ui-wall-${wall.toLowerCase()}`) {
+                b.className = 'toggle-btn active';
+            } else {
+                b.className = 'toggle-btn';
+            }
+        }
         enforceCageLogic();
     }
 
     function selectClass(cls) {
         selectedClass = cls;
         const btns = document.getElementById('class-toggles').children;
-        for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(cls) ? 'active' : ''}`;
+        const clsMap = {'I':'1', 'II':'2', 'III':'3', 'IV':'4', 'V':'5'};
+        for(let b of btns) {
+            if(b.id === `ui-class-${clsMap[cls]}`) {
+                b.className = 'toggle-btn active';
+            } else {
+                b.className = 'toggle-btn';
+            }
+        }
         enforceCageLogic();
     }
 
@@ -463,9 +657,11 @@
     function showSpecModal() {
         const select = document.getElementById('spec-select');
         const val = select.value;
-        if(val && SPECS_DICT[val]) {
-            document.getElementById('modal-title').innerText = SPECS_DICT[val].title;
-            document.getElementById('modal-desc').innerText = SPECS_DICT[val].desc;
+        const d = langDict[currentLang];
+        
+        if(val) {
+            document.getElementById('modal-title').innerText = d[`${val}_title`] || "";
+            document.getElementById('modal-desc').innerText = d[`${val}_desc`] || "";
             document.getElementById('spec-modal').style.display = 'flex';
         }
         select.value = ""; 
@@ -478,7 +674,7 @@
     // ==========================================
     // CUSTOM CENTERED MODAL KEYBOARD w/ HUD
     // ==========================================
-    function activateKeyboard(inputId, labelText) {
+    function activateKeyboard(inputId, uiLabelId) {
         if (activeInputId) {
             document.getElementById(`card-${activeInputId}`).classList.remove('active-card');
         }
@@ -486,7 +682,7 @@
         activeInputId = inputId;
         
         document.getElementById(`card-${inputId}`).classList.add('active-card');
-        document.getElementById('keyboard-display-label').innerText = labelText;
+        document.getElementById('keyboard-display-label').innerText = document.getElementById(uiLabelId).innerText;
         document.getElementById('keyboard-display').innerText = document.getElementById(inputId).value || "";
         document.getElementById('keyboard-overlay').classList.add('visible');
     }
@@ -543,8 +739,15 @@
     // ==========================================
     function runArbiterValidation() {
         hideKeyboard();
+        const d = langDict[currentLang];
         
-        const cageName = activeCage === 's' ? 'SINGLE' : (activeCage === 'i' ? 'INNER' : 'OUTER');
+        let cageName = "";
+        if(currentLang === 'en') {
+            cageName = activeCage === 's' ? 'SINGLE' : (activeCage === 'i' ? 'INNER' : 'OUTER');
+        } else {
+            cageName = activeCage === 's' ? 'SIMPLE' : (activeCage === 'i' ? 'INTERIOR' : 'EXTERIOR');
+        }
+        
         console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} | Target: ${cageName} CAGE`);
         
         const d_wire = parseMeasurement(document.getElementById('wireDia').value);
@@ -570,8 +773,9 @@
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
-            resultsTitle.innerText = 'Invalid Selection';
-            resultsLog.innerHTML = `<div style="color:var(--fail-color); font-family:monospace; text-align:center;">ASTM C76 does not define a requirement for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass}.</div>`;
+            resultsTitle.innerText = d.errInvalidTitle;
+            let msg = d.errInvalidDesc.replace('[SIZE]', selectedSize).replace('[WALL]', selectedWall).replace('[CLASS]', selectedClass);
+            resultsLog.innerHTML = `<div style="color:var(--fail-color); font-family:monospace; text-align:center;">${msg}</div>`;
             return;
         }
 
@@ -579,8 +783,8 @@
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
-            resultsTitle.innerText = 'Execution Error';
-            resultsLog.innerHTML = '<div style="color:var(--fail-color); font-family:monospace; text-align:center;">Critical measurements (including Cage Height) missing. Arbiter cannot execute.</div>';
+            resultsTitle.innerText = d.errExecTitle;
+            resultsLog.innerHTML = `<div style="color:var(--fail-color); font-family:monospace; text-align:center;">${d.errExecDesc}</div>`;
             return;
         }
 
@@ -616,7 +820,7 @@
 
         checksHTML += `
             <div class="weight-banner">
-                <span>Estimated Cage Weight</span>
+                <span>${d.weightTitle}</span>
                 <div>${totalEstimatedWeight.toFixed(1)} LBS</div>
             </div>
         `;
@@ -627,13 +831,17 @@
         
         const target_As = classData[activeCage];
         if (!target_As) {
-            resultsLog.innerHTML = `<div style="color:var(--fail-color);">Arbiter Error: ${cageName} cage requirement not defined for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} pipe.</div>`;
+            let msg = d.errCageDesc.replace('[CAGE]', cageName).replace('[SIZE]', selectedSize).replace('[WALL]', selectedWall).replace('[CLASS]', selectedClass);
+            resultsLog.innerHTML = `<div style="color:var(--fail-color);">${msg}</div>`;
             return;
         }
 
         const asPassed = actual_As >= target_As;
         if (!asPassed) passedAll = false;
-        addCheck(`${cageName} Cage Area Steel (As)`, asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${target_As.toFixed(4)}.`);
+        
+        let asTitle = d.chkAsTitle.replace('[CAGE]', cageName);
+        let asDetail = d.chkAsCalc.replace('[ACTUAL]', actual_As.toFixed(4)).replace('[TARGET]', target_As.toFixed(4));
+        addCheck(asTitle, asPassed ? 'PASS' : 'FAIL', asDetail);
 
         // LAW 2: Clear Cover
         const pipe_OD = selectedSize + (sizeData[selectedWall].thk * 2);
@@ -642,30 +850,36 @@
 
         if (activeCage === 'o' || activeCage === 's') {
             clear_cover = (pipe_OD - od_cage) / 2;
-            cover_location = "from outside wall";
+            cover_location = d.locOut;
         } else if (activeCage === 'i') {
             const id_cage = od_cage - (2 * d_wire);
             clear_cover = (id_cage - selectedSize) / 2;
-            cover_location = "from inside wall";
+            cover_location = d.locIn;
         }
 
         const coverPassed = clear_cover >= 0.75 && clear_cover <= 1.5;
         if (!coverPassed) passedAll = false;
-        addCheck(`Structural Clear Cover`, coverPassed ? 'PASS' : 'FAIL', `Calculated cover: ${clear_cover.toFixed(3)}" ${cover_location}. Optimal is ~1.00".`);
+        
+        let coverDetail = d.chkCoverCalc.replace('[COVER]', clear_cover.toFixed(3)).replace('[LOC]', cover_location);
+        addCheck(d.chkCoverTitle, coverPassed ? 'PASS' : 'FAIL', coverDetail);
 
         // LAW 3: Plant Specific Longitudinal count
         const vertPassed = count_vert >= min_vertical;
         if (!vertPassed) passedAll = false;
-        addCheck("Plant Standard Vertical Wires", vertPassed ? 'PASS' : 'FAIL', `Count: ${count_vert}. Plant minimum required: ${min_vertical}.`);
+        
+        let vertDetail = d.chkVertCalc.replace('[COUNT]', count_vert).replace('[MIN]', min_vertical);
+        addCheck(d.chkVertTitle, vertPassed ? 'PASS' : 'FAIL', vertDetail);
 
         // LAW 4: Bell Geometry
         if (od_bell > 0) {
             const bellClearance = od_bell - od_cage;
             const bellPassed = bellClearance > 1.5; 
             if (!bellPassed) passedAll = false;
-            addCheck("Bell Flare Geometry", bellPassed ? 'PASS' : 'FAIL', `Flare extension: ${bellClearance.toFixed(2)}". Must maintain cover in bell seating.`);
+            
+            let bellDetail = d.chkBellPass.replace('[EXT]', bellClearance.toFixed(2));
+            addCheck(d.chkBellTitle, bellPassed ? 'PASS' : 'FAIL', bellDetail);
         } else {
-            addCheck("Bell Flare Geometry", 'WARN', `No bell OD entered. Bypassing joint specification.`);
+            addCheck(d.chkBellTitle, 'WARN', d.chkBellWarn);
         }
 
         // Output Result UI
@@ -673,12 +887,12 @@
             resultsContainer.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
             resultsContainer.style.borderColor = '#064e3b';
             resultsTitle.style.color = 'var(--pass-color)';
-            resultsTitle.innerText = `${cageName} Cage Approved`;
+            resultsTitle.innerText = d.approvedTitle.replace('[CAGE]', cageName);
         } else {
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
-            resultsTitle.innerText = `${cageName} Cage Failed`;
+            resultsTitle.innerText = d.failedTitle.replace('[CAGE]', cageName);
         }
         
         resultsLog.innerHTML = checksHTML;
@@ -686,6 +900,7 @@
     }
 
     // Boot up
+    setLanguage('en');
     renderSizes();
     enforceCageLogic();
 </script>
