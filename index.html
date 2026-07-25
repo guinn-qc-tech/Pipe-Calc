@@ -29,7 +29,7 @@
             justify-content: center;
         }
 
-        .container { max-width: 900px; w-full: 100%; width: 100%; padding-bottom: 50px; }
+        .container { max-width: 900px; w-full: 100%; width: 100%; padding-bottom: 280px; } /* Extra padding for keyboard */
 
         /* Typography & Headers */
         h2 { font-size: 14px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; }
@@ -68,13 +68,22 @@
         .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
         @media (min-width: 600px) { .bento-grid { grid-template-columns: repeat(4, 1fr); } }
         
-        .input-card { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
-        .input-card label { display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .input-card { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; }
+        .input-card label { display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; pointer-events: none; }
         .input-card input {
             width: 80%; background: var(--bg-input); border: 1px solid var(--border-color); color: white;
-            padding: 10px; border-radius: 6px; font-family: monospace; font-size: 16px; outline: none;
+            padding: 10px; border-radius: 6px; font-family: monospace; font-size: 16px; outline: none; cursor: pointer;
         }
-        .input-card input:focus { border-color: var(--accent-blue); }
+        
+        /* Active Input Styling */
+        .input-card.active-card {
+            border-color: var(--accent-blue);
+            background: rgba(37, 99, 235, 0.1);
+            box-shadow: 0 0 10px rgba(37,99,235,0.3);
+        }
+        .input-card.active-card input {
+            border-color: var(--accent-blue);
+        }
 
         /* Execute Button */
         .execute-btn {
@@ -99,12 +108,35 @@
         
         .check-detail { font-family: monospace; font-size: 12px; color: var(--text-muted); }
 
-        /* Modal */
+        /* Spec Modal */
         #spec-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; align-items: center; justify-content: center; z-index: 50; }
         .modal-content { background: var(--bg-card); border: 2px solid var(--accent-blue); padding: 25px; border-radius: 16px; max-width: 500px; width: 100%; }
         .modal-title { font-size: 22px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; }
         .modal-desc { background: var(--bg-base); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); color: #d1d5db; line-height: 1.5; }
         .close-btn { width: 100%; padding: 15px; background: var(--bg-input); border: 1px solid var(--border-color); color: white; font-weight: bold; margin-top: 20px; border-radius: 10px; cursor: pointer; }
+
+        /* Custom Keyboard Slide-Up Panel */
+        #custom-keyboard {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--bg-card);
+            border-top: 2px solid var(--border-color);
+            padding: 15px; box-sizing: border-box;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.8);
+            transform: translateY(100%); transition: transform 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+            z-index: 1000;
+        }
+        #custom-keyboard.visible { transform: translateY(0); }
+        .key-btn {
+            background: var(--bg-input); color: white;
+            border: 1px solid var(--border-color); border-radius: 10px;
+            padding: 18px 0; font-size: 24px; font-weight: 900; font-family: monospace;
+            cursor: pointer; transition: background 0.1s;
+        }
+        .key-btn:active { background: #4b5563; }
+        .key-action { color: var(--warn-color); font-size: 18px; }
+        .key-done { background: var(--accent-blue); color: white; border-color: var(--accent-blue); font-size: 18px; letter-spacing: 1px; }
+        .key-done:active { background: var(--accent-blue-hover); }
     </style>
 </head>
 <body>
@@ -147,40 +179,40 @@
         <button class="toggle-btn" id="outer-btn" onclick="selectCage('outer')">Outer Cage</button>
     </div>
 
-    <!-- Fractional Inputs -->
+    <!-- Fractional Inputs (Set to readonly to prevent native keyboard) -->
     <h2>Fractional Measurements</h2>
     <div class="bento-grid">
-        <div class="input-card">
+        <div class="input-card" id="card-wireDia" onclick="activateKeyboard('wireDia')">
             <label>Wire Dia (e.g. 3/8)</label>
-            <input type="text" id="wireDia" placeholder="0.0">
+            <input type="text" id="wireDia" placeholder="0.0" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-pitch" onclick="activateKeyboard('pitch')">
             <label>Pitch (e.g. 2 1/2)</label>
-            <input type="text" id="pitch" placeholder="0.0">
+            <input type="text" id="pitch" placeholder="0.0" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-cageOD" onclick="activateKeyboard('cageOD')">
             <label>Cage OD (Inches)</label>
-            <input type="text" id="cageOD" placeholder="0.0">
+            <input type="text" id="cageOD" placeholder="0.0" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-cageLength" onclick="activateKeyboard('cageLength')">
             <label>Cage Height</label>
-            <input type="text" id="cageLength" placeholder="0.0">
+            <input type="text" id="cageLength" placeholder="0.0" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-vertDia" onclick="activateKeyboard('vertDia')">
             <label>Vert Dia</label>
-            <input type="text" id="vertDia" placeholder="0.0">
+            <input type="text" id="vertDia" placeholder="0.0" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-vertCount" onclick="activateKeyboard('vertCount')">
             <label>Vert Count</label>
-            <input type="text" id="vertCount" placeholder="0">
+            <input type="text" id="vertCount" placeholder="0" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-bellOD" onclick="activateKeyboard('bellOD')">
             <label>Bell OD</label>
-            <input type="text" id="bellOD" placeholder="Optional">
+            <input type="text" id="bellOD" placeholder="Optional" readonly>
         </div>
-        <div class="input-card">
+        <div class="input-card" id="card-bellLength" onclick="activateKeyboard('bellLength')">
             <label>Bell Ht</label>
-            <input type="text" id="bellLength" placeholder="Optional">
+            <input type="text" id="bellLength" placeholder="Optional" readonly>
         </div>
     </div>
 
@@ -202,6 +234,29 @@
         <div class="modal-desc" id="modal-desc"></div>
         <button class="close-btn" onclick="closeSpecModal()">CLOSE</button>
     </div>
+</div>
+
+<!-- Custom Number & Fraction Keyboard -->
+<div id="custom-keyboard">
+    <button class="key-btn" onclick="handleKey('1')">1</button>
+    <button class="key-btn" onclick="handleKey('2')">2</button>
+    <button class="key-btn" onclick="handleKey('3')">3</button>
+    <button class="key-btn key-action" onclick="handleBackspace()">⌫</button>
+
+    <button class="key-btn" onclick="handleKey('4')">4</button>
+    <button class="key-btn" onclick="handleKey('5')">5</button>
+    <button class="key-btn" onclick="handleKey('6')">6</button>
+    <button class="key-btn key-action" onclick="handleClear()">CLR</button>
+
+    <button class="key-btn" onclick="handleKey('7')">7</button>
+    <button class="key-btn" onclick="handleKey('8')">8</button>
+    <button class="key-btn" onclick="handleKey('9')">9</button>
+    <button class="key-btn key-action" onclick="handleKey(' ')">SPC</button> <!-- Space for fractions -->
+
+    <button class="key-btn" onclick="handleKey('.')">.</button>
+    <button class="key-btn" onclick="handleKey('0')">0</button>
+    <button class="key-btn" onclick="handleKey('/')">/</button>
+    <button class="key-btn key-done" onclick="hideKeyboard()">DONE</button>
 </div>
 
 <script>
@@ -235,7 +290,8 @@
     let selectedSize = 24;
     let selectedWall = 'B';
     let selectedClass = 'III';
-    let activeCage = 'inner'; // 'inner' or 'outer'
+    let activeCage = 'inner'; 
+    let activeInputId = null;
 
     // ==========================================
     // INITIALIZATION & UI
@@ -275,7 +331,7 @@
     }
 
     function selectCage(cageType) {
-        if (cageType === 'outer' && selectedSize < 36) return; // Prevent selection on small pipe
+        if (cageType === 'outer' && selectedSize < 36) return;
         activeCage = cageType;
         updateCageToggles();
     }
@@ -302,11 +358,52 @@
             document.getElementById('modal-desc').innerText = SPECS_DICT[val].desc;
             document.getElementById('spec-modal').style.display = 'flex';
         }
-        select.value = ""; // Reset dropdown
+        select.value = ""; 
     }
 
     function closeSpecModal() {
         document.getElementById('spec-modal').style.display = 'none';
+    }
+
+    // ==========================================
+    // CUSTOM KEYBOARD LOGIC
+    // ==========================================
+    function activateKeyboard(inputId) {
+        // Clear previous active styling
+        if (activeInputId) {
+            document.getElementById(`card-${activeInputId}`).classList.remove('active-card');
+        }
+        
+        activeInputId = inputId;
+        
+        // Add active styling and slide up keyboard
+        document.getElementById(`card-${inputId}`).classList.add('active-card');
+        document.getElementById('custom-keyboard').classList.add('visible');
+    }
+
+    function hideKeyboard() {
+        if (activeInputId) {
+            document.getElementById(`card-${activeInputId}`).classList.remove('active-card');
+        }
+        document.getElementById('custom-keyboard').classList.remove('visible');
+        activeInputId = null;
+    }
+
+    function handleKey(val) {
+        if (!activeInputId) return;
+        const input = document.getElementById(activeInputId);
+        input.value += val;
+    }
+
+    function handleBackspace() {
+        if (!activeInputId) return;
+        const input = document.getElementById(activeInputId);
+        input.value = input.value.slice(0, -1);
+    }
+
+    function handleClear() {
+        if (!activeInputId) return;
+        document.getElementById(activeInputId).value = "";
     }
 
     // ==========================================
@@ -332,9 +429,11 @@
     // ARBITER VALIDATION ENGINE
     // ==========================================
     function runArbiterValidation() {
+        // Hide keyboard when processing
+        hideKeyboard();
+
         console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} | Target: ${activeCage.toUpperCase()} CAGE`);
         
-        // Grab inputs
         const d_wire = parseMeasurement(document.getElementById('wireDia').value);
         const s_pitch = parseMeasurement(document.getElementById('pitch').value);
         const d_vert = parseMeasurement(document.getElementById('vertDia').value);
@@ -403,11 +502,9 @@
         let cover_location = "";
 
         if (activeCage === 'outer') {
-            // Outer cage clearance measured from the outside wall inward
             clear_cover = (pipe_OD - od_cage) / 2;
             cover_location = "from outside wall";
         } else {
-            // Inner cage clearance measured from the inside wall outward
             const id_cage = od_cage - (2 * d_wire);
             clear_cover = (id_cage - selectedSize) / 2;
             cover_location = "from inside wall";
