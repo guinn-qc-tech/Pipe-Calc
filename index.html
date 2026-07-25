@@ -1,84 +1,396 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Precast Steel Calc</title>
+    <title>Cage Expert - Arbiter Engine</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; background-color: #f4f4f4; text-align: center; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-        input { width: 80%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; text-align: center; }
-        button { width: 85%; padding: 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        button:active { background-color: #0056b3; }
-        #result { margin-top: 20px; font-size: 22px; font-weight: bold; color: #333; }
-        label { font-weight: bold; display: block; margin-top: 10px; }
-        .hint { font-size: 12px; color: #666; font-weight: normal; display: block; margin-top: 2px; }
+        :root {
+            --bg-base: #030712;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --border-color: #374151;
+            --accent-blue: #2563eb;
+            --accent-blue-hover: #1d4ed8;
+            --pass-color: #10b981;
+            --fail-color: #ef4444;
+            --warn-color: #eab308;
+        }
+        
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg-base); 
+            color: var(--text-main); 
+            padding: 15px; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container { max-width: 900px; w-full: 100%; width: 100%; padding-bottom: 50px; }
+
+        /* Typography & Headers */
+        h2 { font-size: 14px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; margin-bottom: 10px; }
+        select {
+            width: 100%; padding: 12px; background: var(--bg-card); color: white;
+            border: 1px solid var(--border-color); border-radius: 8px; font-weight: bold;
+            text-transform: uppercase; margin-bottom: 15px; font-size: 14px; outline: none;
+        }
+
+        /* Buttons & Toggles */
+        .btn-group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
+        .btn-group::-webkit-scrollbar { display: none; } /* Hide scrollbar for clean look */
+        
+        .toggle-btn {
+            background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted);
+            padding: 12px 20px; border-radius: 10px; font-weight: 900; font-size: 16px; cursor: pointer;
+            transition: 0.2s; min-width: 60px; text-align: center;
+        }
+        .toggle-btn.active {
+            background: var(--accent-blue); color: white; border-color: var(--accent-blue);
+            box-shadow: 0 0 15px rgba(37,99,235,0.4); transform: scale(1.05);
+        }
+
+        .split-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .split-container { display: flex; background: var(--bg-card); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .split-container .toggle-btn { flex: 1; border: none; background: transparent; padding: 10px; font-size: 14px; box-shadow: none; transform: none; }
+        .split-container .toggle-btn.active { background: #374151; color: white; border-radius: 8px; }
+
+        /* Input Grid */
+        .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
+        @media (min-width: 600px) { .bento-grid { grid-template-columns: repeat(4, 1fr); } }
+        
+        .input-card { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .input-card label { display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
+        .input-card input {
+            width: 80%; background: var(--bg-input); border: 1px solid var(--border-color); color: white;
+            padding: 10px; border-radius: 6px; font-family: monospace; font-size: 16px; outline: none;
+        }
+        .input-card input:focus { border-color: var(--accent-blue); }
+
+        /* Execute Button */
+        .execute-btn {
+            width: 100%; padding: 20px; background: var(--accent-blue); color: white; border: none;
+            border-radius: 16px; font-size: 20px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 2px; cursor: pointer; box-shadow: 0 0 20px rgba(29,78,216,0.3);
+            margin-bottom: 20px; transition: 0.1s;
+        }
+        .execute-btn:active { transform: scale(0.98); }
+
+        /* Results Output */
+        #results-container { display: none; padding: 20px; border-radius: 16px; border: 4px solid; margin-bottom: 30px; }
+        #results-title { text-align: center; font-size: 30px; font-weight: 900; text-transform: uppercase; margin: 0 0 20px 0; }
+        .check-item { background: var(--bg-base); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; flex-direction: column; }
+        .check-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .check-law { font-weight: bold; font-size: 13px; text-transform: uppercase; color: #d1d5db; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; }
+        
+        .badge-pass { background: rgba(16, 185, 129, 0.2); color: var(--pass-color); }
+        .badge-fail { background: rgba(239, 68, 68, 0.2); color: var(--fail-color); }
+        .badge-warn { background: rgba(234, 179, 8, 0.2); color: var(--warn-color); }
+        
+        .check-detail { font-family: monospace; font-size: 12px; color: var(--text-muted); }
+
+        /* Modal */
+        #spec-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; align-items: center; justify-content: center; z-index: 50; }
+        .modal-content { background: var(--bg-card); border: 2px solid var(--accent-blue); padding: 25px; border-radius: 16px; max-width: 500px; width: 100%; }
+        .modal-title { font-size: 22px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; }
+        .modal-desc { background: var(--bg-base); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); color: #d1d5db; line-height: 1.5; }
+        .close-btn { width: 100%; padding: 15px; background: var(--bg-input); border: 1px solid var(--border-color); color: white; font-weight: bold; margin-top: 20px; border-radius: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Pipe Cage Steel Calc</h2>
+<div class="container">
     
-    <label>Wire Diameter (inches)</label>
-    <span class="hint">Accepts decimals (0.375) or fractions (3/8)</span>
-    <input type="text" id="dia" placeholder="e.g. 0.375 or 3/8">
-    
-    <label>Wire Spacing / Pitch (inches)</label>
-    <span class="hint">Accepts decimals (3.25) or mixed fractions (3 1/4)</span>
-    <input type="text" id="space" placeholder="e.g. 3.0 or 3 1/4">
-    
-    <button onclick="calculate()">CALCULATE AS</button>
-    
-    <div id="result">As: 0.0000</div>
+    <!-- Specs Dropdown -->
+    <select id="spec-select" onchange="showSpecModal()">
+        <option value="" selected disabled>📖 VIEW ASTM C76 CAGE SPECS</option>
+        <option value="c76_steel">ASTM C76 - Area Steel (As)</option>
+        <option value="c76_cover">ASTM C76 - Clear Cover</option>
+        <option value="c76_long">ASTM C76 - Longitudinal</option>
+        <option value="joint_geo">Joint Geometry - Bell/Spigot</option>
+    </select>
+
+    <!-- Size Toggles -->
+    <div class="btn-group" id="size-toggles">
+        <!-- Generated by JS -->
+    </div>
+
+    <!-- Wall & Class Toggles -->
+    <div class="split-group">
+        <div class="split-container" id="wall-toggles">
+            <button class="toggle-btn" onclick="selectWall('A')">Wall A</button>
+            <button class="toggle-btn active" onclick="selectWall('B')">Wall B</button>
+            <button class="toggle-btn" onclick="selectWall('C')">Wall C</button>
+        </div>
+        <div class="split-container" id="class-toggles">
+            <button class="toggle-btn" onclick="selectClass('I')">Class I</button>
+            <button class="toggle-btn" onclick="selectClass('II')">Class II</button>
+            <button class="toggle-btn active" onclick="selectClass('III')">Class III</button>
+            <button class="toggle-btn" onclick="selectClass('IV')">Class IV</button>
+            <button class="toggle-btn" onclick="selectClass('V')">Class V</button>
+        </div>
+    </div>
+
+    <!-- Fractional Inputs -->
+    <h2>Fractional Measurements</h2>
+    <div class="bento-grid">
+        <div class="input-card">
+            <label>Wire Dia (e.g. 3/8)</label>
+            <input type="text" id="wireDia" placeholder="0.0">
+        </div>
+        <div class="input-card">
+            <label>Pitch (e.g. 2 1/2)</label>
+            <input type="text" id="pitch" placeholder="0.0">
+        </div>
+        <div class="input-card">
+            <label>Cage OD (Inches)</label>
+            <input type="text" id="cageOD" placeholder="0.0">
+        </div>
+        <div class="input-card">
+            <label>Cage Height</label>
+            <input type="text" id="cageLength" placeholder="0.0">
+        </div>
+        <div class="input-card">
+            <label>Vert Dia</label>
+            <input type="text" id="vertDia" placeholder="0.0">
+        </div>
+        <div class="input-card">
+            <label>Vert Count</label>
+            <input type="text" id="vertCount" placeholder="0">
+        </div>
+        <div class="input-card">
+            <label>Bell OD</label>
+            <input type="text" id="bellOD" placeholder="Optional">
+        </div>
+        <div class="input-card">
+            <label>Bell Ht</label>
+            <input type="text" id="bellLength" placeholder="Optional">
+        </div>
+    </div>
+
+    <!-- Execute -->
+    <button class="execute-btn" onclick="runArbiterValidation()">Run Arbiter Validation</button>
+
+    <!-- Results -->
+    <div id="results-container">
+        <h3 id="results-title"></h3>
+        <div id="results-log"></div>
+    </div>
+
+</div>
+
+<!-- Spec Modal -->
+<div id="spec-modal">
+    <div class="modal-content">
+        <h3 class="modal-title" id="modal-title"></h3>
+        <div class="modal-desc" id="modal-desc"></div>
+        <button class="close-btn" onclick="closeSpecModal()">CLOSE</button>
+    </div>
 </div>
 
 <script>
-// Utility to parse fractions or decimals safely
-function parseMeasurement(val) {
-    if (!val) return 0;
-    val = val.trim();
+    // ==========================================
+    // DATA CONFIGURATION
+    // ==========================================
+    const PIPE_SIZES = [15, 18, 24, 30, 36, 42, 48, 54, 60, 72];
     
-    // Handle mixed fractions like "3 1/4"
-    if (val.includes(' ')) {
-        let parts = val.split(' ');
-        let whole = parseFloat(parts[0]);
-        let fracParts = parts[1].split('/');
-        if (fracParts.length === 2) {
-            return whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
+    // Baseline ASTM C76 Wall B Class III Requirements
+    const ASTM_C76_BASE = {
+        15: { wallB_thickness: 2.25, req_As: 0.07, min_vertical: 4 },
+        18: { wallB_thickness: 2.50, req_As: 0.10, min_vertical: 4 },
+        24: { wallB_thickness: 3.00, req_As: 0.17, min_vertical: 4 },
+        30: { wallB_thickness: 3.50, req_As: 0.18, min_vertical: 6 },
+        36: { wallB_thickness: 4.00, req_As: 0.23, min_vertical: 6 },
+        42: { wallB_thickness: 4.50, req_As: 0.29, min_vertical: 8 },
+        48: { wallB_thickness: 5.00, req_As: 0.38, min_vertical: 8 },
+        54: { wallB_thickness: 5.50, req_As: 0.44, min_vertical: 8 },
+        60: { wallB_thickness: 6.00, req_As: 0.54, min_vertical: 8 },
+        72: { wallB_thickness: 7.00, req_As: 0.71, min_vertical: 10 }
+    };
+
+    const SPECS_DICT = {
+        'c76_steel': { title: 'ASTM C76 - Area Steel (As)', desc: 'Governs the minimum square inches of circumferential steel per linear foot of pipe based on D-Load testing.' },
+        'c76_cover': { title: 'ASTM C76 - Clear Cover', desc: 'Mandates minimum concrete cover over the steel reinforcement to prevent corrosion and spalling (Typically 1 inch for Wall B).' },
+        'c76_long': { title: 'ASTM C76 - Longitudinal', desc: 'Requires continuous longitudinal wires spaced accurately to maintain cage rigidity and resist bending moments.' },
+        'joint_geo': { title: 'Joint Geometry - Bell/Spigot', desc: 'The cage must not intrude into the engineered bell or spigot joint profiles, maintaining proper gasket seating clearances.' }
+    };
+
+    // State Variables
+    let selectedSize = 24;
+    let selectedWall = 'B';
+    let selectedClass = 'III';
+
+    // ==========================================
+    // INITIALIZATION & UI
+    // ==========================================
+    function renderSizes() {
+        const container = document.getElementById('size-toggles');
+        container.innerHTML = '';
+        PIPE_SIZES.forEach(size => {
+            const btn = document.createElement('button');
+            btn.className = `toggle-btn ${size === selectedSize ? 'active' : ''}`;
+            btn.innerText = `${size}"`;
+            btn.onclick = () => {
+                selectedSize = size;
+                renderSizes();
+            };
+            container.appendChild(btn);
+        });
+    }
+
+    function selectWall(wall) {
+        selectedWall = wall;
+        const btns = document.getElementById('wall-toggles').children;
+        for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(wall) ? 'active' : ''}`;
+    }
+
+    function selectClass(cls) {
+        selectedClass = cls;
+        const btns = document.getElementById('class-toggles').children;
+        for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(cls) ? 'active' : ''}`;
+    }
+
+    function showSpecModal() {
+        const select = document.getElementById('spec-select');
+        const val = select.value;
+        if(val && SPECS_DICT[val]) {
+            document.getElementById('modal-title').innerText = SPECS_DICT[val].title;
+            document.getElementById('modal-desc').innerText = SPECS_DICT[val].desc;
+            document.getElementById('spec-modal').style.display = 'flex';
         }
-        return whole;
+        select.value = ""; // Reset dropdown
     }
-    // Handle pure fractions like "3/8"
-    else if (val.includes('/')) {
-        let parts = val.split('/');
-        return parseFloat(parts[0]) / parseFloat(parts[1]);
-    }
-    // Handle standard decimals like "0.375"
-    return parseFloat(val);
-}
 
-function calculate() {
-    // Get values and convert via the fraction parser
-    let rawDia = document.getElementById('dia').value;
-    let rawSpace = document.getElementById('space').value;
-    
-    let d = parseMeasurement(rawDia);
-    let s = parseMeasurement(rawSpace);
-    
-    if (d > 0 && s > 0) {
-        // Area = (PI * d^2 / 4) * (12 / spacing)
-        let areaSingle = (Math.PI * Math.pow(d, 2)) / 4;
-        let asValue = areaSingle * (12 / s);
+    function closeSpecModal() {
+        document.getElementById('spec-modal').style.display = 'none';
+    }
+
+    // ==========================================
+    // FRACTION PARSER UTILITY
+    // ==========================================
+    function parseMeasurement(val) {
+        if (!val) return 0;
+        val = val.toString().trim();
+        if (val.includes(' ')) {
+            let parts = val.split(' ');
+            let whole = parseFloat(parts[0]);
+            let fracParts = parts[1].split('/');
+            if (fracParts.length === 2) return whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
+            return whole;
+        } else if (val.includes('/')) {
+            let parts = val.split('/');
+            return parseFloat(parts[0]) / parseFloat(parts[1]);
+        }
+        return parseFloat(val) || 0;
+    }
+
+    // ==========================================
+    // ARBITER VALIDATION ENGINE
+    // ==========================================
+    function runArbiterValidation() {
+        console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass}`);
         
-        // Show result rounded to 4 decimals
-        document.getElementById('result').innerHTML = "As: " + asValue.toFixed(4) + " sq. in/ft";
-        document.getElementById('result').style.color = "#007bff";
-    } else {
-        document.getElementById('result').innerHTML = "Enter valid numbers or fractions";
-        document.getElementById('result').style.color = "red";
-    }
-}
-</script>
+        // Grab inputs
+        const d_wire = parseMeasurement(document.getElementById('wireDia').value);
+        const s_pitch = parseMeasurement(document.getElementById('pitch').value);
+        const d_vert = parseMeasurement(document.getElementById('vertDia').value);
+        const count_vert = parseMeasurement(document.getElementById('vertCount').value);
+        const od_cage = parseMeasurement(document.getElementById('cageOD').value);
+        const l_cage = parseMeasurement(document.getElementById('cageLength').value);
+        const od_bell = parseMeasurement(document.getElementById('bellOD').value);
+        
+        console.log(`[ARBITER] Parsed: d_wire=${d_wire}, s_pitch=${s_pitch}, od_cage=${od_cage}`);
 
+        const resultsContainer = document.getElementById('results-container');
+        const resultsTitle = document.getElementById('results-title');
+        const resultsLog = document.getElementById('results-log');
+        
+        resultsLog.innerHTML = '';
+        resultsContainer.style.display = 'block';
+
+        if (d_wire <= 0 || s_pitch <= 0 || od_cage <= 0) {
+            resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            resultsContainer.style.borderColor = '#7f1d1d';
+            resultsTitle.style.color = 'var(--fail-color)';
+            resultsTitle.innerText = 'Execution Error';
+            resultsLog.innerHTML = '<div style="color:var(--fail-color); font-family:monospace; text-align:center;">Critical measurements missing. Arbiter cannot execute.</div>';
+            return;
+        }
+
+        const reqs = ASTM_C76_BASE[selectedSize];
+        if (!reqs) {
+            resultsLog.innerHTML = '<div style="color:var(--fail-color);">Size parameters outside Arbiter database.</div>';
+            return;
+        }
+
+        let passedAll = true;
+        let checksHTML = '';
+
+        const addCheck = (law, status, detail) => {
+            let badgeClass = status === 'PASS' ? 'badge-pass' : status === 'FAIL' ? 'badge-fail' : 'badge-warn';
+            checksHTML += `
+                <div class="check-item">
+                    <div class="check-header">
+                        <span class="check-law">${law}</span>
+                        <span class="badge ${badgeClass}">${status}</span>
+                    </div>
+                    <span class="check-detail">${detail}</span>
+                </div>
+            `;
+        };
+
+        // LAW 1: Area of Steel
+        const areaSingle = (Math.PI * Math.pow(d_wire, 2)) / 4;
+        const actual_As = areaSingle * (12 / s_pitch);
+        const asPassed = actual_As >= reqs.req_As;
+        if (!asPassed) passedAll = false;
+        addCheck("Circumferential Area Steel (As)", asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${reqs.req_As.toFixed(4)}.`);
+
+        // LAW 2: Clear Cover
+        const pipe_OD = selectedSize + (reqs.wallB_thickness * 2);
+        const clear_cover = (pipe_OD - od_cage) / 2;
+        const coverPassed = clear_cover >= 0.75 && clear_cover <= 1.5;
+        if (!coverPassed) passedAll = false;
+        addCheck("Structural Clear Cover", coverPassed ? 'PASS' : 'FAIL', `Calculated cover: ${clear_cover.toFixed(3)}". Optimal is ~1.00".`);
+
+        // LAW 3: Longitudinal
+        const vertPassed = count_vert >= reqs.min_vertical;
+        if (!vertPassed) passedAll = false;
+        addCheck("Longitudinal Support", vertPassed ? 'PASS' : 'FAIL', `Count: ${count_vert}. Min required: ${reqs.min_vertical}.`);
+
+        // LAW 4: Bell Geometry
+        if (od_bell > 0) {
+            const bellClearance = od_bell - od_cage;
+            const bellPassed = bellClearance > 1.5; 
+            if (!bellPassed) passedAll = false;
+            addCheck("Bell Flare Geometry", bellPassed ? 'PASS' : 'FAIL', `Flare extension: ${bellClearance.toFixed(2)}". Must maintain cover in bell seating.`);
+        } else {
+            addCheck("Bell Flare Geometry", 'WARN', `No bell OD entered. Bypassing joint specification.`);
+        }
+
+        // Output Result UI
+        if (passedAll) {
+            resultsContainer.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+            resultsContainer.style.borderColor = '#064e3b';
+            resultsTitle.style.color = 'var(--pass-color)';
+            resultsTitle.innerText = 'Cage Approved';
+        } else {
+            resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            resultsContainer.style.borderColor = '#7f1d1d';
+            resultsTitle.style.color = 'var(--fail-color)';
+            resultsTitle.innerText = 'Cage Failed';
+        }
+        
+        resultsLog.innerHTML = checksHTML;
+        console.log(`[ARBITER] Execution complete. Status: ${passedAll ? 'PASSED' : 'FAILED'}`);
+    }
+
+    // Boot up
+    renderSizes();
+</script>
 </body>
 </html>
