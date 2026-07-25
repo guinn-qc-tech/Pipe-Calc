@@ -67,7 +67,7 @@
 
         /* Input Grid */
         .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
-        @media (min-width: 600px) { .bento-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (min-width: 600px) { .bento-grid { grid-template-columns: repeat(4, 1fr); } }
         
         .input-card { background: var(--bg-card); padding: 15px; border-radius: 16px; border: 1px solid var(--border-color); cursor: pointer; transition: 0.2s; }
         .input-card label { display: block; font-size: 11px; font-weight: bold; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; pointer-events: none; }
@@ -82,9 +82,7 @@
             background: rgba(37, 99, 235, 0.1);
             box-shadow: 0 0 10px rgba(37,99,235,0.3);
         }
-        .input-card.active-card input {
-            border-color: var(--accent-blue);
-        }
+        .input-card.active-card input { border-color: var(--accent-blue); }
 
         /* Execute Button */
         .execute-btn {
@@ -134,6 +132,15 @@
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 95%; max-width: 450px;
         }
         
+        /* Keyboard HUD Display */
+        #keyboard-display-container {
+            grid-column: span 4; background: #030712; border: 1px solid #4b5563; 
+            border-radius: 8px; padding: 15px; display: flex; flex-direction: column; 
+            align-items: flex-end; justify-content: center; margin-bottom: 10px;
+        }
+        #keyboard-display-label { font-size: 10px; color: var(--text-muted); text-transform: uppercase; font-weight: bold; width: 100%; text-align: left; }
+        #keyboard-display { font-size: 32px; color: white; font-family: monospace; font-weight: 900; min-height: 38px; }
+
         .key-btn {
             background: var(--bg-input); color: white;
             border: 1px solid var(--border-color); border-radius: 10px;
@@ -144,7 +151,7 @@
         .key-action { color: var(--warn-color); font-size: 20px; }
         .key-done { 
             grid-column: span 4; background: var(--accent-blue); color: white; 
-            border-color: var(--accent-blue); font-size: 22px; letter-spacing: 2px; padding: 15px 0; 
+            border-color: var(--accent-blue); font-size: 22px; letter-spacing: 2px; padding: 15px 0; margin-top: 5px;
         }
         .key-done:active { background: var(--accent-blue-hover); }
     </style>
@@ -168,56 +175,62 @@
     </div>
 
     <!-- Wall & Class Toggles -->
-    <div class="split-group">
+    <div class="split-group" style="grid-template-columns: 1fr;">
         <div class="split-container" id="wall-toggles">
             <button class="toggle-btn" onclick="selectWall('A')">Wall A</button>
             <button class="toggle-btn active" onclick="selectWall('B')">Wall B</button>
             <button class="toggle-btn" onclick="selectWall('C')">Wall C</button>
         </div>
-        <!-- Locked to Class III for baseline processing -->
-        <div class="split-container" id="class-toggles" style="display: none;">
+        <div class="split-container" id="class-toggles">
+            <button class="toggle-btn" onclick="selectClass('I')">Class I</button>
+            <button class="toggle-btn" onclick="selectClass('II')">Class II</button>
             <button class="toggle-btn active" onclick="selectClass('III')">Class III</button>
+            <button class="toggle-btn" onclick="selectClass('IV')">Class IV</button>
+            <button class="toggle-btn" onclick="selectClass('V')">Class V</button>
         </div>
     </div>
 
     <!-- 3-Way Cage Target Toggle -->
     <div class="cage-target-container" id="cage-toggles">
-        <button class="toggle-btn active" id="btn-single" onclick="selectCage('single')">SINGLE CAGE</button>
-        <button class="toggle-btn" id="btn-inner" onclick="selectCage('inner')">INNER CAGE</button>
-        <button class="toggle-btn" id="btn-outer" onclick="selectCage('outer')">OUTER CAGE</button>
+        <button class="toggle-btn active" id="btn-single" onclick="selectCage('s')">SINGLE CAGE</button>
+        <button class="toggle-btn" id="btn-inner" onclick="selectCage('i')">INNER CAGE</button>
+        <button class="toggle-btn" id="btn-outer" onclick="selectCage('o')">OUTER CAGE</button>
     </div>
 
     <!-- Fractional Inputs -->
     <h2>Fractional Measurements</h2>
     <div class="bento-grid">
-        <div class="input-card" id="card-wireDia" onclick="activateKeyboard('wireDia')">
+        <div class="input-card" id="card-wireDia" onclick="activateKeyboard('wireDia', 'Wire Diameter')">
             <label>Wire Dia (e.g. 3/8)</label>
             <input type="text" id="wireDia" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-pitch" onclick="activateKeyboard('pitch')">
+        <div class="input-card" id="card-pitch" onclick="activateKeyboard('pitch', 'Pitch Spacing')">
             <label>Pitch (e.g. 2 1/2)</label>
             <input type="text" id="pitch" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-cageOD" onclick="activateKeyboard('cageOD')">
+        <div class="input-card" id="card-cageOD" onclick="activateKeyboard('cageOD', 'Cage OD')">
             <label>Cage OD (Inches)</label>
             <input type="text" id="cageOD" placeholder="0.0" readonly>
         </div>
-        <!-- Re-added Cage Height for Weight Calculation -->
-        <div class="input-card" id="card-cageLength" onclick="activateKeyboard('cageLength')">
+        <div class="input-card" id="card-cageLength" onclick="activateKeyboard('cageLength', 'Cage Height')">
             <label>Cage Height (Inches)</label>
             <input type="text" id="cageLength" placeholder="e.g. 96" readonly>
         </div>
-        <div class="input-card" id="card-vertDia" onclick="activateKeyboard('vertDia')">
+        <div class="input-card" id="card-vertDia" onclick="activateKeyboard('vertDia', 'Vertical Wire Dia')">
             <label>Vert Dia</label>
             <input type="text" id="vertDia" placeholder="0.0" readonly>
         </div>
-        <div class="input-card" id="card-vertCount" onclick="activateKeyboard('vertCount')">
+        <div class="input-card" id="card-vertCount" onclick="activateKeyboard('vertCount', 'Vertical Wire Count')">
             <label>Vert Count</label>
             <input type="text" id="vertCount" placeholder="0" readonly>
         </div>
-        <div class="input-card" id="card-bellOD" onclick="activateKeyboard('bellOD')">
+        <div class="input-card" id="card-bellOD" onclick="activateKeyboard('bellOD', 'Bell OD')">
             <label>Bell OD</label>
             <input type="text" id="bellOD" placeholder="Optional" readonly>
+        </div>
+        <div class="input-card" id="card-bellLength" onclick="activateKeyboard('bellLength', 'Bell Height')">
+            <label>Bell Ht</label>
+            <input type="text" id="bellLength" placeholder="Optional" readonly>
         </div>
     </div>
 
@@ -244,6 +257,13 @@
 <!-- Custom Centered Keyboard Overlay -->
 <div id="keyboard-overlay">
     <div id="custom-keyboard">
+        
+        <!-- Interactive HUD Display -->
+        <div id="keyboard-display-container">
+            <span id="keyboard-display-label">Active Input</span>
+            <div id="keyboard-display"></div>
+        </div>
+
         <button class="key-btn" onclick="handleKey('1')">1</button>
         <button class="key-btn" onclick="handleKey('2')">2</button>
         <button class="key-btn" onclick="handleKey('3')">3</button>
@@ -268,71 +288,71 @@
 
 <script>
     // ==========================================
-    // DATA CONFIGURATION
+    // MULTI-DIMENSIONAL C76 DATA CONFIGURATION
     // ==========================================
     const PIPE_SIZES = [15, 18, 24, 30, 36, 42, 48, 54, 60, 72];
     
-    // Plant Specific Baseline: ASTM C76 Class III - Walls A, B, C + Internal Plant Vert Rules
+    // As = { s: single cage, i: inner cage, o: outer cage }. 'null' means ASTM spec doesn't allow it.
     const ASTM_C76 = {
-        15: { 
-            A: { thk: 1.875, single: 0.07, inner: null, outer: null },
-            B: { thk: 2.25, single: 0.07, inner: null, outer: null },
-            C: { thk: 3.00, single: 0.07, inner: null, outer: null },
-            min_vertical: 12
+        15: {
+            min_vertical: 12,
+            A: { thk: 1.875, I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.16, i:null, o:null}, V: null },
+            B: { thk: 2.25,  I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.10, i:null, o:null}, V: {s:0.14, i:null, o:null} },
+            C: { thk: 3.00,  I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.07, i:null, o:null}, V: {s:0.07, i:null, o:null} }
         },
         18: {
-            A: { thk: 2.00, single: 0.07, inner: null, outer: null },
-            B: { thk: 2.50, single: 0.07, inner: null, outer: null },
-            C: { thk: 3.25, single: 0.07, inner: null, outer: null },
-            min_vertical: 12
+            min_vertical: 12,
+            A: { thk: 2.00, I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.17, i:null, o:null}, V: null },
+            B: { thk: 2.50, I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.14, i:null, o:null}, V: {s:0.19, i:null, o:null} },
+            C: { thk: 3.25, I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.07, i:null, o:null}, V: {s:0.10, i:null, o:null} }
         },
         24: {
-            A: { thk: 2.50, single: 0.17, inner: null, outer: null },
-            B: { thk: 3.00, single: 0.07, inner: null, outer: null },
-            C: { thk: 3.75, single: 0.07, inner: null, outer: null },
-            min_vertical: 12
+            min_vertical: 12,
+            A: { thk: 2.50, I: null, II: {s:0.11, i:0.07, o:0.07}, III: {s:0.17, i:0.14, o:0.10}, IV: {s:0.29, i:0.27, o:0.17}, V: null },
+            B: { thk: 3.00, I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.27, i:null, o:null}, V: {s:0.30, i:null, o:null} },
+            C: { thk: 3.75, I: null, II: {s:0.07, i:null, o:null}, III: {s:0.07, i:null, o:null}, IV: {s:0.07, i:null, o:null}, V: {s:0.12, i:null, o:null} }
         },
         30: {
-            A: { thk: 2.875, single: 0.19, inner: null, outer: null },
-            B: { thk: 3.50, single: 0.18, inner: null, outer: null },
-            C: { thk: 4.25, single: null, inner: 0.10, outer: 0.08 },
-            min_vertical: 12
+            min_vertical: 12,
+            A: { thk: 2.875, I: null, II: {s:0.14, i:0.15, o:0.11}, III: {s:0.19, i:0.18, o:0.14}, IV: {s:0.38, i:0.35, o:0.21}, V: null },
+            B: { thk: 3.50,  I: null, II: {s:0.14, i:null, o:null}, III: {s:0.18, i:null, o:null}, IV: {s:0.28, i:null, o:null}, V: {s:0.41, i:null, o:null} },
+            C: { thk: 4.25,  I: null, II: {s:0.07, i:null, o:null}, III: {s:0.08, i:0.10, o:0.08}, IV: {s:0.09, i:0.10, o:0.07}, V: {s:0.11, i:0.18, o:0.11} }
         },
         36: {
-            A: { thk: 3.00, single: null, inner: 0.13, outer: 0.21 },
-            B: { thk: 4.00, single: null, inner: 0.19, outer: 0.10 },
-            C: { thk: 4.75, single: null, inner: 0.07, outer: 0.08 },
-            min_vertical: 12
+            min_vertical: 12,
+            A: { thk: 3.00, I: null, II: {s:null, i:0.15, o:0.09}, III: {s:null, i:0.21, o:0.13}, IV: {s:null, i:0.33, o:0.20}, V: null },
+            B: { thk: 4.00, I: null, II: {s:null, i:0.13, o:0.07}, III: {s:null, i:0.19, o:0.10}, IV: {s:null, i:0.30, o:0.18}, V: {s:null, i:0.50, o:0.30} },
+            C: { thk: 4.75, I: null, II: {s:0.07, i:0.08, o:0.07}, III: {s:null, i:0.07, o:0.08}, IV: {s:0.14, i:0.12, o:0.08}, V: {s:null, i:0.27, o:0.16} }
         },
         42: {
-            A: { thk: 3.50, single: null, inner: 0.25, outer: 0.15 },
-            B: { thk: 4.50, single: null, inner: 0.21, outer: 0.13 },
-            C: { thk: 5.25, single: null, inner: 0.13, outer: 0.12 }, 
-            min_vertical: 24
+            min_vertical: 24,
+            A: { thk: 3.50, I: null, II: {s:null, i:0.18, o:0.11}, III: {s:null, i:0.25, o:0.15}, IV: {s:null, i:0.39, o:0.23}, V: null },
+            B: { thk: 4.50, I: null, II: {s:null, i:0.17, o:0.10}, III: {s:null, i:0.23, o:0.14}, IV: {s:null, i:0.35, o:0.21}, V: {s:null, i:0.60, o:0.36} },
+            C: { thk: 5.25, I: null, II: {s:0.10, i:0.11, o:0.07}, III: {s:null, i:0.12, o:0.07}, IV: {s:null, i:0.20, o:0.12}, V: {s:null, i:0.36, o:0.22} }
         },
         48: {
-            A: { thk: 4.00, single: null, inner: 0.32, outer: 0.19 },
-            B: { thk: 5.00, single: null, inner: 0.24, outer: 0.14 },
-            C: { thk: 5.75, single: null, inner: 0.18, outer: 0.16 },
-            min_vertical: 24
+            min_vertical: 24,
+            A: { thk: 4.00, I: null, II: {s:null, i:0.21, o:0.13}, III: {s:null, i:0.32, o:0.19}, IV: {s:null, i:0.47, o:0.28}, V: null },
+            B: { thk: 5.00, I: null, II: {s:null, i:0.18, o:0.11}, III: {s:null, i:0.24, o:0.14}, IV: {s:null, i:0.42, o:0.25}, V: {s:null, i:0.73, o:0.44} },
+            C: { thk: 5.75, I: null, II: {s:0.14, i:0.15, o:0.09}, III: {s:null, i:0.16, o:0.10}, IV: {s:null, i:0.26, o:0.16}, V: {s:null, i:0.47, o:0.28} }
         },
         54: {
-            A: { thk: 4.50, single: null, inner: 0.38, outer: 0.23 },
-            B: { thk: 5.50, single: null, inner: 0.29, outer: 0.17 }, 
-            C: { thk: 6.25, single: null, inner: 0.21, outer: 0.23 },
-            min_vertical: 24
+            min_vertical: 24,
+            A: { thk: 4.50, I: null, II: {s:null, i:0.25, o:0.15}, III: {s:null, i:0.38, o:0.23}, IV: {s:null, i:0.55, o:0.33}, V: null },
+            B: { thk: 5.50, I: null, II: {s:null, i:0.22, o:0.13}, III: {s:null, i:0.29, o:0.17}, IV: {s:null, i:0.50, o:0.30}, V: {s:null, i:0.58, o:0.35} },
+            C: { thk: 6.25, I: null, II: {s:0.17, i:0.19, o:0.11}, III: {s:null, i:0.23, o:0.14}, IV: {s:null, i:0.34, o:0.20}, V: {s:null, i:0.64, o:0.38} }
         },
         60: {
-            A: { thk: 5.00, single: null, inner: 0.44, outer: 0.26 },
-            B: { thk: 6.00, single: null, inner: 0.38, outer: 0.20 },
-            C: { thk: 6.75, single: null, inner: 0.28, outer: 0.25 }, 
-            min_vertical: 24
+            min_vertical: 24,
+            A: { thk: 5.00, I: {s:null, i:0.15, o:0.09}, II: {s:null, i:0.30, o:0.18}, III: {s:null, i:0.44, o:0.26}, IV: {s:null, i:0.66, o:0.40}, V: null },
+            B: { thk: 6.00, I: {s:null, i:0.13, o:0.08}, II: {s:null, i:0.28, o:0.17}, III: {s:null, i:0.38, o:0.23}, IV: {s:null, i:0.59, o:0.35}, V: {s:null, i:0.70, o:0.42} },
+            C: { thk: 6.75, I: {s:null, i:0.12, o:0.07}, II: {s:null, i:0.22, o:0.13}, III: {s:null, i:0.28, o:0.17}, IV: {s:null, i:0.46, o:0.28}, V: {s:null, i:0.78, o:0.47} }
         },
         72: {
-            A: { thk: 6.00, single: null, inner: 0.57, outer: 0.34 },
-            B: { thk: 7.00, single: null, inner: 0.49, outer: 0.29 },
-            C: { thk: 7.75, single: null, inner: 0.36, outer: 0.22 },
-            min_vertical: 24
+            min_vertical: 24,
+            A: { thk: 6.00, I: {s:null, i:0.21, o:0.13}, II: {s:null, i:0.41, o:0.25}, III: {s:null, i:0.57, o:0.34}, IV: {s:null, i:0.88, o:0.53}, V: null },
+            B: { thk: 7.00, I: {s:null, i:0.19, o:0.11}, II: {s:null, i:0.39, o:0.23}, III: {s:null, i:0.49, o:0.29}, IV: {s:null, i:0.79, o:0.47}, V: {s:null, i:0.93, o:0.56} },
+            C: { thk: 7.75, I: {s:null, i:0.15, o:0.09}, II: {s:null, i:0.30, o:0.18}, III: {s:null, i:0.36, o:0.22}, IV: {s:null, i:0.61, o:0.37}, V: {s:null, i:1.10, o:0.66} }
         }
     };
 
@@ -347,7 +367,7 @@
     let selectedSize = 24;
     let selectedWall = 'B';
     let selectedClass = 'III';
-    let activeCage = 'single'; 
+    let activeCage = 's'; // 's', 'i', 'o'
     let activeInputId = null;
 
     // ==========================================
@@ -378,50 +398,66 @@
 
     function selectClass(cls) {
         selectedClass = cls;
+        const btns = document.getElementById('class-toggles').children;
+        for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(cls) ? 'active' : ''}`;
+        enforceCageLogic();
     }
 
     function selectCage(cageType) {
-        const reqs = ASTM_C76[selectedSize][selectedWall];
+        const classData = ASTM_C76[selectedSize][selectedWall][selectedClass];
+        if (!classData) return;
         
-        if (cageType === 'single' && reqs.single === null) return;
-        if ((cageType === 'inner' || cageType === 'outer') && reqs.inner === null) return;
+        if (cageType === 's' && classData.s === null) return;
+        if ((cageType === 'i' || cageType === 'o') && classData.i === null) return;
         
         activeCage = cageType;
         updateCageToggles();
     }
 
     function enforceCageLogic() {
-        const reqs = ASTM_C76[selectedSize][selectedWall];
+        const classData = ASTM_C76[selectedSize][selectedWall][selectedClass];
         
-        if (reqs.single !== null) {
-            activeCage = 'single';
-        } else if (reqs.single === null && reqs.inner !== null) {
-            if (activeCage === 'single') activeCage = 'inner';
+        // If the combo isn't in ASTM C76 at all, logic locks out the toggles.
+        if (!classData) {
+            updateCageToggles();
+            return;
+        }
+
+        if (classData.s !== null) {
+            activeCage = 's';
+        } else if (classData.s === null && classData.i !== null) {
+            if (activeCage === 's') activeCage = 'i';
         }
         
         updateCageToggles();
     }
 
     function updateCageToggles() {
-        const reqs = ASTM_C76[selectedSize][selectedWall];
+        const classData = ASTM_C76[selectedSize][selectedWall][selectedClass];
         
         const btnSingle = document.getElementById('btn-single');
         const btnInner = document.getElementById('btn-inner');
         const btnOuter = document.getElementById('btn-outer');
 
-        if (reqs.single !== null) {
+        if (!classData) {
+            btnSingle.disabled = true; btnInner.disabled = true; btnOuter.disabled = true;
+            btnSingle.className = 'toggle-btn'; btnInner.className = 'toggle-btn'; btnOuter.className = 'toggle-btn';
+            return;
+        }
+
+        if (classData.s !== null) {
             btnSingle.disabled = false;
-            btnInner.disabled = true;
-            btnOuter.disabled = true;
+            btnInner.disabled = classData.i === null;
+            btnOuter.disabled = classData.o === null;
         } else {
             btnSingle.disabled = true;
             btnInner.disabled = false;
             btnOuter.disabled = false;
         }
 
-        btnSingle.className = `toggle-btn ${activeCage === 'single' ? 'active' : ''}`;
-        btnInner.className = `toggle-btn ${activeCage === 'inner' ? 'active' : ''}`;
-        btnOuter.className = `toggle-btn ${activeCage === 'outer' ? 'active' : ''}`;
+        btnSingle.className = `toggle-btn ${activeCage === 's' ? 'active' : ''}`;
+        btnInner.className = `toggle-btn ${activeCage === 'i' ? 'active' : ''}`;
+        btnOuter.className = `toggle-btn ${activeCage === 'o' ? 'active' : ''}`;
     }
 
     function showSpecModal() {
@@ -440,9 +476,9 @@
     }
 
     // ==========================================
-    // CUSTOM CENTERED MODAL KEYBOARD
+    // CUSTOM CENTERED MODAL KEYBOARD w/ HUD
     // ==========================================
-    function activateKeyboard(inputId) {
+    function activateKeyboard(inputId, labelText) {
         if (activeInputId) {
             document.getElementById(`card-${activeInputId}`).classList.remove('active-card');
         }
@@ -450,6 +486,8 @@
         activeInputId = inputId;
         
         document.getElementById(`card-${inputId}`).classList.add('active-card');
+        document.getElementById('keyboard-display-label').innerText = labelText;
+        document.getElementById('keyboard-display').innerText = document.getElementById(inputId).value || "";
         document.getElementById('keyboard-overlay').classList.add('visible');
     }
 
@@ -465,17 +503,20 @@
         if (!activeInputId) return;
         const input = document.getElementById(activeInputId);
         input.value += val;
+        document.getElementById('keyboard-display').innerText = input.value;
     }
 
     function handleBackspace() {
         if (!activeInputId) return;
         const input = document.getElementById(activeInputId);
         input.value = input.value.slice(0, -1);
+        document.getElementById('keyboard-display').innerText = input.value;
     }
 
     function handleClear() {
         if (!activeInputId) return;
         document.getElementById(activeInputId).value = "";
+        document.getElementById('keyboard-display').innerText = "";
     }
 
     // ==========================================
@@ -502,7 +543,9 @@
     // ==========================================
     function runArbiterValidation() {
         hideKeyboard();
-        console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} | Target: ${activeCage.toUpperCase()} CAGE`);
+        
+        const cageName = activeCage === 's' ? 'SINGLE' : (activeCage === 'i' ? 'INNER' : 'OUTER');
+        console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} | Target: ${cageName} CAGE`);
         
         const d_wire = parseMeasurement(document.getElementById('wireDia').value);
         const s_pitch = parseMeasurement(document.getElementById('pitch').value);
@@ -519,20 +562,25 @@
         resultsLog.innerHTML = '';
         resultsContainer.style.display = 'block';
 
+        const sizeData = ASTM_C76[selectedSize];
+        const classData = sizeData[selectedWall][selectedClass];
+        const min_vertical = sizeData.min_vertical;
+
+        if (!classData) {
+            resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            resultsContainer.style.borderColor = '#7f1d1d';
+            resultsTitle.style.color = 'var(--fail-color)';
+            resultsTitle.innerText = 'Invalid Selection';
+            resultsLog.innerHTML = `<div style="color:var(--fail-color); font-family:monospace; text-align:center;">ASTM C76 does not define a requirement for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass}.</div>`;
+            return;
+        }
+
         if (d_wire <= 0 || s_pitch <= 0 || od_cage <= 0 || l_cage <= 0) {
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
             resultsTitle.innerText = 'Execution Error';
             resultsLog.innerHTML = '<div style="color:var(--fail-color); font-family:monospace; text-align:center;">Critical measurements (including Cage Height) missing. Arbiter cannot execute.</div>';
-            return;
-        }
-
-        const standard = ASTM_C76[selectedSize][selectedWall];
-        const min_vertical = ASTM_C76[selectedSize].min_vertical;
-
-        if (!standard) {
-            resultsLog.innerHTML = '<div style="color:var(--fail-color);">Size parameters outside Arbiter database.</div>';
             return;
         }
 
@@ -554,20 +602,16 @@
 
         // --- CAGE WEIGHT CALCULATOR (Volumetric Density of Steel = 0.2833 lbs/in³) ---
         const steelDensity = 0.2833; 
-        
-        // 1. Circumferential Wire Weight
         const circWireArea = Math.PI * Math.pow(d_wire / 2, 2);
-        const cageCircumference = Math.PI * od_cage; // linear inches per wrap
+        const cageCircumference = Math.PI * od_cage; 
         const numberOfWraps = l_cage / s_pitch;
-        const totalCircLength = cageCircumference * numberOfWraps; // total linear inches
+        const totalCircLength = cageCircumference * numberOfWraps; 
         const circWeight = totalCircLength * circWireArea * steelDensity;
 
-        // 2. Vertical Wire Weight
         const vertWireArea = Math.PI * Math.pow(d_vert / 2, 2);
-        const totalVertLength = l_cage * count_vert; // total linear inches
+        const totalVertLength = l_cage * count_vert; 
         const vertWeight = totalVertLength * vertWireArea * steelDensity;
 
-        // 3. Total
         const totalEstimatedWeight = circWeight + vertWeight;
 
         checksHTML += `
@@ -581,25 +625,25 @@
         const areaSingle = (Math.PI * Math.pow(d_wire, 2)) / 4;
         const actual_As = areaSingle * (12 / s_pitch);
         
-        const target_As = standard[activeCage];
+        const target_As = classData[activeCage];
         if (!target_As) {
-            resultsLog.innerHTML = `<div style="color:var(--fail-color);">Arbiter Error: ${activeCage.toUpperCase()} cage requirement not defined for ${selectedSize}" Wall ${selectedWall} pipe.</div>`;
+            resultsLog.innerHTML = `<div style="color:var(--fail-color);">Arbiter Error: ${cageName} cage requirement not defined for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} pipe.</div>`;
             return;
         }
 
         const asPassed = actual_As >= target_As;
         if (!asPassed) passedAll = false;
-        addCheck(`${activeCage} Cage Area Steel (As)`, asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${target_As.toFixed(4)}.`);
+        addCheck(`${cageName} Cage Area Steel (As)`, asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${target_As.toFixed(4)}.`);
 
         // LAW 2: Clear Cover
-        const pipe_OD = selectedSize + (standard.thk * 2);
+        const pipe_OD = selectedSize + (sizeData[selectedWall].thk * 2);
         let clear_cover = 0;
         let cover_location = "";
 
-        if (activeCage === 'outer' || activeCage === 'single') {
+        if (activeCage === 'o' || activeCage === 's') {
             clear_cover = (pipe_OD - od_cage) / 2;
             cover_location = "from outside wall";
-        } else if (activeCage === 'inner') {
+        } else if (activeCage === 'i') {
             const id_cage = od_cage - (2 * d_wire);
             clear_cover = (id_cage - selectedSize) / 2;
             cover_location = "from inside wall";
@@ -629,12 +673,12 @@
             resultsContainer.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
             resultsContainer.style.borderColor = '#064e3b';
             resultsTitle.style.color = 'var(--pass-color)';
-            resultsTitle.innerText = `${activeCage.toUpperCase()} Cage Approved`;
+            resultsTitle.innerText = `${cageName} Cage Approved`;
         } else {
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
-            resultsTitle.innerText = `${activeCage.toUpperCase()} Cage Failed`;
+            resultsTitle.innerText = `${cageName} Cage Failed`;
         }
         
         resultsLog.innerHTML = checksHTML;
