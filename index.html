@@ -410,7 +410,7 @@
             chkAsTitle: "[CAGE] Cage Area Steel (As)",
             chkAsCalc: "Calculated [ACTUAL] sq.in/ft. Required: [TARGET].",
             chkCoverTitle: "Structural Clear Cover",
-            chkCoverCalc: "Calculated cover: [COVER]\" [LOC]. Optimal is ~1.00\".",
+            chkCoverCalc: "Calculated cover: [COVER]\" [LOC]. Target: [OPT].",
             locOut: "from outside wall", locIn: "from inside wall",
             chkVertTitle: "Plant Standard Vertical Wires",
             chkVertCalc: "Count: [COUNT]. Plant minimum required: [MIN].",
@@ -462,7 +462,7 @@
             chkAsTitle: "Área de Acero (As) Armadura [CAGE]",
             chkAsCalc: "Calculado [ACTUAL] pulg.cuad/pie. Requerido: [TARGET].",
             chkCoverTitle: "Recubrimiento Estructural",
-            chkCoverCalc: "Recubrimiento calculado: [COVER]\" [LOC]. Óptimo es ~1.00\".",
+            chkCoverCalc: "Recubrimiento calculado: [COVER]\" [LOC]. Objetivo: [OPT].",
             locOut: "desde pared exterior", locIn: "desde pared interior",
             chkVertTitle: "Alambres Verticales Estándar",
             chkVertCalc: "Cantidad: [COUNT]. Mínimo de planta requerido: [MIN].",
@@ -847,20 +847,38 @@
         const pipe_OD = selectedSize + (sizeData[selectedWall].thk * 2);
         let clear_cover = 0;
         let cover_location = "";
+        let optimal_text = "~1.00\"";
+        let target_min = 0.75;
+        let target_max = 1.5;
 
-        if (activeCage === 'o' || activeCage === 's') {
+        if (activeCage === 'o') {
             clear_cover = (pipe_OD - od_cage) / 2;
             cover_location = d.locOut;
         } else if (activeCage === 'i') {
             const id_cage = od_cage - (2 * d_wire);
             clear_cover = (id_cage - selectedSize) / 2;
             cover_location = d.locIn;
+        } else if (activeCage === 's') {
+            // Single Cage: Measured from inside surface (ASTM C76 8.1.1)
+            const id_cage = od_cage - (2 * d_wire);
+            clear_cover = (id_cage - selectedSize) / 2;
+            cover_location = d.locIn;
+            
+            const wall_thk = sizeData[selectedWall].thk;
+            if (wall_thk < 2.5) {
+                target_min = 0.75; // 3/4 inch minimum for thin walls
+                optimal_text = ">= 0.75\"";
+            } else {
+                target_min = wall_thk * 0.35;
+                target_max = wall_thk * 0.50;
+                optimal_text = `${target_min.toFixed(2)}" - ${target_max.toFixed(2)}" (35%-50%)`;
+            }
         }
 
-        const coverPassed = clear_cover >= 0.75 && clear_cover <= 1.5;
+        const coverPassed = clear_cover >= target_min && clear_cover <= target_max;
         if (!coverPassed) passedAll = false;
         
-        let coverDetail = d.chkCoverCalc.replace('[COVER]', clear_cover.toFixed(3)).replace('[LOC]', cover_location);
+        let coverDetail = d.chkCoverCalc.replace('[COVER]', clear_cover.toFixed(3)).replace('[LOC]', cover_location).replace('[OPT]', optimal_text);
         addCheck(d.chkCoverTitle, coverPassed ? 'PASS' : 'FAIL', coverDetail);
 
         // LAW 3: Plant Specific Longitudinal count
