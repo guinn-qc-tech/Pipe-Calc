@@ -41,7 +41,7 @@
 
         /* Buttons & Toggles */
         .btn-group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; }
-        .btn-group::-webkit-scrollbar { display: none; } /* Hide scrollbar for clean look */
+        .btn-group::-webkit-scrollbar { display: none; }
         
         .toggle-btn {
             background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted);
@@ -52,11 +52,17 @@
             background: var(--accent-blue); color: white; border-color: var(--accent-blue);
             box-shadow: 0 0 15px rgba(37,99,235,0.4); transform: scale(1.05);
         }
+        .toggle-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
 
         .split-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .split-container { display: flex; background: var(--bg-card); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color); }
         .split-container .toggle-btn { flex: 1; border: none; background: transparent; padding: 10px; font-size: 14px; box-shadow: none; transform: none; }
         .split-container .toggle-btn.active { background: #374151; color: white; border-radius: 8px; }
+
+        /* Cage Target Toggle */
+        .cage-target-container { margin-bottom: 20px; display: flex; background: var(--bg-input); border-radius: 12px; padding: 4px; border: 1px solid var(--border-color); }
+        .cage-target-container .toggle-btn { flex: 1; padding: 15px; font-size: 18px; text-transform: uppercase; letter-spacing: 1px; border: none; background: transparent; }
+        .cage-target-container .toggle-btn.active { background: var(--accent-blue); color: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
 
         /* Input Grid */
         .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
@@ -135,6 +141,12 @@
         </div>
     </div>
 
+    <!-- Cage Target Toggle -->
+    <div class="cage-target-container" id="cage-toggles">
+        <button class="toggle-btn active" onclick="selectCage('inner')">Inner / Single Cage</button>
+        <button class="toggle-btn" id="outer-btn" onclick="selectCage('outer')">Outer Cage</button>
+    </div>
+
     <!-- Fractional Inputs -->
     <h2>Fractional Measurements</h2>
     <div class="bento-grid">
@@ -198,24 +210,24 @@
     // ==========================================
     const PIPE_SIZES = [15, 18, 24, 30, 36, 42, 48, 54, 60, 72];
     
-    // Baseline ASTM C76 Wall B Class III Requirements
+    // Plant Specific Baseline: ASTM C76 Wall B Class III + Internal Plant Vert Rules
     const ASTM_C76_BASE = {
-        15: { wallB_thickness: 2.25, req_As: 0.07, min_vertical: 4 },
-        18: { wallB_thickness: 2.50, req_As: 0.10, min_vertical: 4 },
-        24: { wallB_thickness: 3.00, req_As: 0.17, min_vertical: 4 },
-        30: { wallB_thickness: 3.50, req_As: 0.18, min_vertical: 6 },
-        36: { wallB_thickness: 4.00, req_As: 0.23, min_vertical: 6 },
-        42: { wallB_thickness: 4.50, req_As: 0.29, min_vertical: 8 },
-        48: { wallB_thickness: 5.00, req_As: 0.38, min_vertical: 8 },
-        54: { wallB_thickness: 5.50, req_As: 0.44, min_vertical: 8 },
-        60: { wallB_thickness: 6.00, req_As: 0.54, min_vertical: 8 },
-        72: { wallB_thickness: 7.00, req_As: 0.71, min_vertical: 10 }
+        15: { wallB_thickness: 2.25, inner_As: 0.07, outer_As: null, min_vertical: 12 },
+        18: { wallB_thickness: 2.50, inner_As: 0.07, outer_As: null, min_vertical: 12 },
+        24: { wallB_thickness: 3.00, inner_As: 0.07, outer_As: null, min_vertical: 12 },
+        30: { wallB_thickness: 3.50, inner_As: 0.18, outer_As: null, min_vertical: 12 },
+        36: { wallB_thickness: 4.00, inner_As: 0.19, outer_As: 0.10, min_vertical: 12 },
+        42: { wallB_thickness: 4.50, inner_As: 0.23, outer_As: 0.14, min_vertical: 24 },
+        48: { wallB_thickness: 5.00, inner_As: 0.24, outer_As: 0.14, min_vertical: 24 },
+        54: { wallB_thickness: 5.50, inner_As: 0.29, outer_As: 0.17, min_vertical: 24 },
+        60: { wallB_thickness: 6.00, inner_As: 0.38, outer_As: 0.20, min_vertical: 24 },
+        72: { wallB_thickness: 7.00, inner_As: 0.49, outer_As: 0.29, min_vertical: 24 }
     };
 
     const SPECS_DICT = {
         'c76_steel': { title: 'ASTM C76 - Area Steel (As)', desc: 'Governs the minimum square inches of circumferential steel per linear foot of pipe based on D-Load testing.' },
         'c76_cover': { title: 'ASTM C76 - Clear Cover', desc: 'Mandates minimum concrete cover over the steel reinforcement to prevent corrosion and spalling (Typically 1 inch for Wall B).' },
-        'c76_long': { title: 'ASTM C76 - Longitudinal', desc: 'Requires continuous longitudinal wires spaced accurately to maintain cage rigidity and resist bending moments.' },
+        'c76_long': { title: 'Plant Standard - Longitudinal', desc: 'Requires 12 vertical wires for 36" and under, and 24 vertical wires for 42" and up to maintain rigid forms.' },
         'joint_geo': { title: 'Joint Geometry - Bell/Spigot', desc: 'The cage must not intrude into the engineered bell or spigot joint profiles, maintaining proper gasket seating clearances.' }
     };
 
@@ -223,6 +235,7 @@
     let selectedSize = 24;
     let selectedWall = 'B';
     let selectedClass = 'III';
+    let activeCage = 'inner'; // 'inner' or 'outer'
 
     // ==========================================
     // INITIALIZATION & UI
@@ -236,7 +249,14 @@
             btn.innerText = `${size}"`;
             btn.onclick = () => {
                 selectedSize = size;
+                
+                // Auto-toggle away from outer cage if selecting a size that doesn't support it
+                if (selectedSize < 36 && activeCage === 'outer') {
+                    activeCage = 'inner';
+                }
+                
                 renderSizes();
+                updateCageToggles();
             };
             container.appendChild(btn);
         });
@@ -252,6 +272,26 @@
         selectedClass = cls;
         const btns = document.getElementById('class-toggles').children;
         for(let b of btns) b.className = `toggle-btn ${b.innerText.includes(cls) ? 'active' : ''}`;
+    }
+
+    function selectCage(cageType) {
+        if (cageType === 'outer' && selectedSize < 36) return; // Prevent selection on small pipe
+        activeCage = cageType;
+        updateCageToggles();
+    }
+
+    function updateCageToggles() {
+        const btns = document.getElementById('cage-toggles').children;
+        btns[0].className = `toggle-btn ${activeCage === 'inner' ? 'active' : ''}`;
+        
+        const outerBtn = document.getElementById('outer-btn');
+        if (selectedSize < 36) {
+            outerBtn.disabled = true;
+            outerBtn.className = 'toggle-btn';
+        } else {
+            outerBtn.disabled = false;
+            outerBtn.className = `toggle-btn ${activeCage === 'outer' ? 'active' : ''}`;
+        }
     }
 
     function showSpecModal() {
@@ -292,7 +332,7 @@
     // ARBITER VALIDATION ENGINE
     // ==========================================
     function runArbiterValidation() {
-        console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass}`);
+        console.log(`[ARBITER] Initiating validation for ${selectedSize}" Wall ${selectedWall} Class ${selectedClass} | Target: ${activeCage.toUpperCase()} CAGE`);
         
         // Grab inputs
         const d_wire = parseMeasurement(document.getElementById('wireDia').value);
@@ -346,21 +386,41 @@
         // LAW 1: Area of Steel
         const areaSingle = (Math.PI * Math.pow(d_wire, 2)) / 4;
         const actual_As = areaSingle * (12 / s_pitch);
-        const asPassed = actual_As >= reqs.req_As;
-        if (!asPassed) passedAll = false;
-        addCheck("Circumferential Area Steel (As)", asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${reqs.req_As.toFixed(4)}.`);
+        
+        const target_As = activeCage === 'inner' ? reqs.inner_As : reqs.outer_As;
+        if (!target_As) {
+            resultsLog.innerHTML = `<div style="color:var(--fail-color);">Arbiter Error: ${activeCage.toUpperCase()} cage requirement not defined for ${selectedSize}" pipe.</div>`;
+            return;
+        }
 
-        // LAW 2: Clear Cover
+        const asPassed = actual_As >= target_As;
+        if (!asPassed) passedAll = false;
+        addCheck(`${activeCage} Cage Area Steel (As)`, asPassed ? 'PASS' : 'FAIL', `Calculated ${actual_As.toFixed(4)} sq.in/ft. Required: ${target_As.toFixed(4)}.`);
+
+        // LAW 2: Clear Cover (Dynamic based on Inner vs Outer)
         const pipe_OD = selectedSize + (reqs.wallB_thickness * 2);
-        const clear_cover = (pipe_OD - od_cage) / 2;
+        let clear_cover = 0;
+        let cover_location = "";
+
+        if (activeCage === 'outer') {
+            // Outer cage clearance measured from the outside wall inward
+            clear_cover = (pipe_OD - od_cage) / 2;
+            cover_location = "from outside wall";
+        } else {
+            // Inner cage clearance measured from the inside wall outward
+            const id_cage = od_cage - (2 * d_wire);
+            clear_cover = (id_cage - selectedSize) / 2;
+            cover_location = "from inside wall";
+        }
+
         const coverPassed = clear_cover >= 0.75 && clear_cover <= 1.5;
         if (!coverPassed) passedAll = false;
-        addCheck("Structural Clear Cover", coverPassed ? 'PASS' : 'FAIL', `Calculated cover: ${clear_cover.toFixed(3)}". Optimal is ~1.00".`);
+        addCheck(`Structural Clear Cover`, coverPassed ? 'PASS' : 'FAIL', `Calculated cover: ${clear_cover.toFixed(3)}" ${cover_location}. Optimal is ~1.00".`);
 
-        // LAW 3: Longitudinal
+        // LAW 3: Plant Specific Longitudinal count
         const vertPassed = count_vert >= reqs.min_vertical;
         if (!vertPassed) passedAll = false;
-        addCheck("Longitudinal Support", vertPassed ? 'PASS' : 'FAIL', `Count: ${count_vert}. Min required: ${reqs.min_vertical}.`);
+        addCheck("Plant Standard Vertical Wires", vertPassed ? 'PASS' : 'FAIL', `Count: ${count_vert}. Plant minimum required: ${reqs.min_vertical}.`);
 
         // LAW 4: Bell Geometry
         if (od_bell > 0) {
@@ -377,12 +437,12 @@
             resultsContainer.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
             resultsContainer.style.borderColor = '#064e3b';
             resultsTitle.style.color = 'var(--pass-color)';
-            resultsTitle.innerText = 'Cage Approved';
+            resultsTitle.innerText = `${activeCage.toUpperCase()} Cage Approved`;
         } else {
             resultsContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
             resultsContainer.style.borderColor = '#7f1d1d';
             resultsTitle.style.color = 'var(--fail-color)';
-            resultsTitle.innerText = 'Cage Failed';
+            resultsTitle.innerText = `${activeCage.toUpperCase()} Cage Failed`;
         }
         
         resultsLog.innerHTML = checksHTML;
@@ -391,6 +451,7 @@
 
     // Boot up
     renderSizes();
+    updateCageToggles();
 </script>
 </body>
 </html>
