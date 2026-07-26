@@ -414,6 +414,8 @@
             locOut: "from outside wall", locIn: "from inside wall",
             chkVertTitle: "Plant Standard Vertical Wires",
             chkVertCalc: "Count: [COUNT]. Plant minimum required: [MIN].",
+            chkVertAreaTitle: "ASTM A1064 Vertical Area",
+            chkVertAreaCalc: "Actual As: [ACTUAL]. Min Req: [TARGET] (40% of Circ).",
             chkBellTitle: "Bell Flare Geometry",
             chkBellPass: "Flare extension: [EXT]\". Must maintain cover in bell seating.",
             chkBellWarn: "No bell OD entered. Bypassing joint specification.",
@@ -466,6 +468,8 @@
             locOut: "desde pared exterior", locIn: "desde pared interior",
             chkVertTitle: "Alambres Verticales Estándar",
             chkVertCalc: "Cantidad: [COUNT]. Mínimo de planta requerido: [MIN].",
+            chkVertAreaTitle: "Área Vertical ASTM A1064",
+            chkVertAreaCalc: "As Real: [ACTUAL]. Mín Req: [TARGET] (40% de Circ).",
             chkBellTitle: "Geometría de Campana",
             chkBellPass: "Extensión de campana: [EXT]\". Debe mantener recubrimiento.",
             chkBellWarn: "No se ingresó DE de campana. Omitiendo especificación.",
@@ -888,7 +892,16 @@
         let vertDetail = d.chkVertCalc.replace('[COUNT]', count_vert).replace('[MIN]', min_vertical);
         addCheck(d.chkVertTitle, vertPassed ? 'PASS' : 'FAIL', vertDetail);
 
-        // LAW 4: Bell Geometry
+        // LAW 4: ASTM A1064 Vertical Area (40% Rule)
+        const areaVertSingle = (Math.PI * Math.pow(d_vert, 2)) / 4;
+        const targetVertArea = areaSingle * 0.40;
+        const vertAreaPassed = areaVertSingle >= targetVertArea;
+        if (!vertAreaPassed) passedAll = false;
+        
+        let vertAreaDetail = d.chkVertAreaCalc.replace('[ACTUAL]', areaVertSingle.toFixed(4)).replace('[TARGET]', targetVertArea.toFixed(4));
+        addCheck(d.chkVertAreaTitle, vertAreaPassed ? 'PASS' : 'FAIL', vertAreaDetail);
+
+        // LAW 5: Bell Geometry
         if (od_bell > 0) {
             const bellClearance = od_bell - od_cage;
             const bellPassed = bellClearance > 1.5; 
