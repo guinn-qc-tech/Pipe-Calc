@@ -28,6 +28,7 @@
             margin: 0;
             display: flex;
             justify-content: center;
+            overflow-x: hidden;
         }
 
         .container { max-width: 900px; width: 100%; padding-bottom: 50px; }
@@ -118,8 +119,17 @@
         
         .check-detail { font-family: monospace; font-size: 12px; color: var(--text-muted); }
 
-        /* Spec Modal */
-        #spec-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; align-items: center; justify-content: center; z-index: 50; }
+        /* Export Button */
+        .export-btn {
+            width: 100%; padding: 15px; background: var(--bg-input); color: white; border: 1px solid var(--border-color);
+            border-radius: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer;
+            margin-top: 15px; transition: 0.2s;
+        }
+        .export-btn:active { transform: scale(0.98); }
+
+        /* Spec Modal & Liability Modal */
+        #spec-modal, #liability-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; align-items: center; justify-content: center; z-index: 50; }
+        #liability-modal { z-index: 1000; backdrop-filter: blur(5px); }
         .modal-content { background: var(--bg-card); border: 2px solid var(--accent-blue); padding: 25px; border-radius: 16px; max-width: 500px; width: 100%; }
         .modal-title { font-size: 22px; font-weight: 900; margin: 0 0 10px 0; text-transform: uppercase; }
         .modal-desc { background: var(--bg-base); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); color: #d1d5db; line-height: 1.5; }
@@ -160,9 +170,36 @@
             border-color: var(--accent-blue); font-size: 22px; letter-spacing: 2px; padding: 15px 0; margin-top: 5px;
         }
         .key-done:active { background: var(--accent-blue-hover); }
+
+        /* Snail Mascot Animation */
+        #snail-mascot {
+            position: fixed;
+            bottom: 10px;
+            left: -50px;
+            font-size: 24px;
+            z-index: 100;
+            pointer-events: none;
+            animation: snailCrawl 45s linear infinite;
+        }
+        @keyframes snailCrawl {
+            0% { transform: translateX(-50px); }
+            100% { transform: translateX(calc(100vw + 50px)); }
+        }
     </style>
 </head>
 <body>
+
+<!-- The Snail Mascot -->
+<div id="snail-mascot">🐌</div>
+
+<!-- Liability Modal -->
+<div id="liability-modal">
+    <div class="modal-content">
+        <h3 class="modal-title" id="liab-title"></h3>
+        <div class="modal-desc" id="liab-desc" style="font-size: 13px; text-align: justify; line-height: 1.6;"></div>
+        <button class="execute-btn" id="liab-accept-btn" style="margin-top: 20px;" onclick="acceptLiability()"></button>
+    </div>
+</div>
 
 <div class="container">
     
@@ -255,6 +292,7 @@
     <div id="results-container">
         <h3 id="results-title"></h3>
         <div id="results-log"></div>
+        <button class="export-btn" id="ui-export-btn" onclick="exportToSpreadsheet()">📋 COPY SPREADSHEET DATA</button>
     </div>
 
 </div>
@@ -329,7 +367,7 @@
         30: {
             min_vertical: 12,
             A: { thk: 2.875, I: null, II: {s:0.14, i:0.15, o:0.11}, III: {s:0.19, i:0.18, o:0.14}, IV: {s:0.38, i:0.35, o:0.21}, V: null },
-            B: { thk: 3.50,  I: null, II: {s:0.14, i:null, o:null}, III: {s:0.18, i:null, o:null}, IV: {s:0.28, i:null, o:null}, V: {s:0.41, i:null, o:null} },
+            B: { thk: 3.50,  I: null, II: {s:0.14, i:null, o:null}, III: {s:0.18, i:null, o:null}, IV: {s:0.28, i:null, o:null}, V: {s:null, i:0.41, o:0.25} },
             C: { thk: 4.25,  I: null, II: {s:0.07, i:null, o:null}, III: {s:0.08, i:0.10, o:0.08}, IV: {s:0.09, i:0.10, o:0.07}, V: {s:0.11, i:0.18, o:0.11} }
         },
         36: {
@@ -396,6 +434,15 @@
             kbClr: "CLR", kbSpc: "SPC", kbDone: "DONE",
             placeholderOpt: "Optional",
             
+            // New Liability Modal Strings
+            liabilityTitle: "TERMS OF USE & LIABILITY DISCLAIMER",
+            liabilityDesc: "The Arbiter Engine and all associated calculations are provided for informational and preliminary quality control purposes only. This application does not replace the requirement for stamped, certified engineering drawings, official plant specifications, or the professional judgment of a licensed Professional Engineer (PE).<br><br>This software is provided 'AS-IS' without warranty of any kind, express or implied. By using this application, the user assumes all risks. The developer shall not be held liable for any structural failures, manufacturing defects, material waste, financial losses, or damages arising from the use of or reliance on these calculations. Always verify measurements against official ASTM C76 documentation.",
+            liabilityAccept: "I ACCEPT",
+            
+            // New Export Strings
+            exportBtn: "📋 COPY SPREADSHEET DATA",
+            exportCopied: "✅ COPIED TO CLIPBOARD!",
+
             // Arbiter Outputs
             errInvalidTitle: "Invalid Selection",
             errInvalidDesc: "ASTM C76 does not define a requirement for [SIZE]\" Wall [WALL] Class [CLASS].",
@@ -450,6 +497,15 @@
             kbClr: "BORR", kbSpc: "ESP", kbDone: "LISTO",
             placeholderOpt: "Opcional",
             
+            // New Liability Modal Strings
+            liabilityTitle: "TÉRMINOS DE USO Y DESCARGO DE RESPONSABILIDAD",
+            liabilityDesc: "El Motor Arbiter y todos los cálculos asociados se proporcionan únicamente con fines informativos y de control de calidad preliminar. Esta aplicación no reemplaza el requisito de planos de ingeniería certificados y sellados, especificaciones oficiales de la planta o el juicio profesional de un Ingeniero Profesional (PE) con licencia.<br><br>Este software se proporciona 'TAL CUAL' sin garantía de ningún tipo, expresa o implícita. Al usar esta aplicación, el usuario asume todos los riesgos. El desarrollador no será responsable de ninguna falla estructural, defecto de fabricación, desperdicio de material, pérdida financiera o daño que surja del uso o la dependencia de estos cálculos. Verifique siempre las medidas contra la documentación oficial de ASTM C76.",
+            liabilityAccept: "ACEPTO",
+
+            // New Export Strings
+            exportBtn: "📋 COPIAR DATOS PARA HOJA DE CÁLCULO",
+            exportCopied: "✅ ¡COPIADO AL PORTAPAPELES!",
+
             // Arbiter Outputs
             errInvalidTitle: "Selección Inválida",
             errInvalidDesc: "ASTM C76 no define un requisito para [SIZE]\" Pared [WALL] Clase [CLASS].",
@@ -535,6 +591,14 @@
         document.getElementById('kb-spc').innerText = d.kbSpc;
         document.getElementById('kb-done').innerText = d.kbDone;
         
+        // Liability Modal Translations
+        document.getElementById('liab-title').innerText = d.liabilityTitle;
+        document.getElementById('liab-desc').innerHTML = d.liabilityDesc;
+        document.getElementById('liab-accept-btn').innerText = d.liabilityAccept;
+
+        // Export Button Translations
+        document.getElementById('ui-export-btn').innerText = d.exportBtn;
+        
         // If HUD is active, update its label text
         if(activeInputId) {
             let uiLabelId = document.getElementById(`card-${activeInputId}`).getAttribute('onclick').split("'")[3];
@@ -545,6 +609,20 @@
         if (document.getElementById('results-container').style.display === 'block') {
             runArbiterValidation();
         }
+    }
+
+    // ==========================================
+    // LIABILITY MANAGEMENT
+    // ==========================================
+    function checkLiability() {
+        if (!localStorage.getItem('arbiter_liability_accepted')) {
+            document.getElementById('liability-modal').style.display = 'flex';
+        }
+    }
+
+    function acceptLiability() {
+        localStorage.setItem('arbiter_liability_accepted', 'true');
+        document.getElementById('liability-modal').style.display = 'none';
     }
 
     // State Variables
@@ -736,6 +814,54 @@
             return parseFloat(parts[0]) / parseFloat(parts[1]);
         }
         return parseFloat(val) || 0;
+    }
+
+    // ==========================================
+    // SPREADSHEET EXPORT ENGINE
+    // ==========================================
+    function exportToSpreadsheet() {
+        const d = langDict[currentLang];
+        let cageName = activeCage === 's' ? 'Single' : (activeCage === 'i' ? 'Inner' : 'Outer');
+        
+        // Gather values safely
+        const size = selectedSize || "0";
+        const wall = selectedWall || "N/A";
+        const cls = selectedClass || "N/A";
+        const wDia = document.getElementById('wireDia').value || "0";
+        const pitch = document.getElementById('pitch').value || "0";
+        const cOD = document.getElementById('cageOD').value || "0";
+        const cLen = document.getElementById('cageLength').value || "0";
+        const vDia = document.getElementById('vertDia').value || "0";
+        const vCount = document.getElementById('vertCount').value || "0";
+        const bOD = document.getElementById('bellOD').value || "N/A";
+        const bLen = document.getElementById('bellLength').value || "N/A";
+        
+        // Format as Tab-Separated Values (TSV) for seamless Excel/Sheets paste
+        const header = "Size\tWall\tClass\tCage\tWire Dia\tPitch\tCage OD\tHeight\tVert Dia\tVert Count\tBell OD\tBell Height";
+        const row = `${size}"\t${wall}\t${cls}\t${cageName}\t${wDia}\t${pitch}\t${cOD}\t${cLen}\t${vDia}\t${vCount}\t${bOD}\t${bLen}`;
+        
+        const tsvData = `${header}\n${row}`;
+        
+        // Push to Clipboard API
+        navigator.clipboard.writeText(tsvData).then(() => {
+            const btn = document.getElementById('ui-export-btn');
+            const originalText = btn.innerText;
+            
+            // Visual feedback
+            btn.innerText = d.exportCopied;
+            btn.style.backgroundColor = "var(--pass-color)";
+            btn.style.color = "#000";
+            
+            // Reset after 2.5 seconds
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = "var(--bg-input)";
+                btn.style.color = "white";
+            }, 2500);
+        }).catch(err => {
+            console.error("[ARBITER] Clipboard export failed:", err);
+            alert("Error exporting to clipboard. Please check browser permissions.");
+        });
     }
 
     // ==========================================
@@ -934,6 +1060,7 @@
     setLanguage('en');
     renderSizes();
     enforceCageLogic();
+    checkLiability();
 </script>
 </body>
 </html>
