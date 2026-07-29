@@ -31,7 +31,7 @@
             overflow-x: hidden;
         }
 
-        .container { max-width: 900px; width: 100%; padding-bottom: 50px; }
+        .container { max-width: 900px; width: 100%; padding-bottom: 80px; }
 
         /* Language Toggle */
         .lang-container { display: flex; justify-content: flex-end; margin-bottom: 15px; }
@@ -119,13 +119,30 @@
         
         .check-detail { font-family: monospace; font-size: 12px; color: var(--text-muted); }
 
-        /* Export Button */
-        .export-btn {
-            width: 100%; padding: 15px; background: var(--bg-input); color: white; border: 1px solid var(--border-color);
+        /* Action Buttons */
+        .action-group { display: flex; gap: 10px; margin-top: 15px; }
+        .export-btn, .save-btn {
+            flex: 1; padding: 15px; color: white; border: 1px solid var(--border-color);
             border-radius: 12px; font-size: 14px; font-weight: bold; text-transform: uppercase; cursor: pointer;
-            margin-top: 15px; transition: 0.2s;
+            transition: 0.2s;
         }
-        .export-btn:active { transform: scale(0.98); }
+        .export-btn { background: var(--bg-input); }
+        .save-btn { background: #059669; border-color: #047857; }
+        .export-btn:active, .save-btn:active { transform: scale(0.98); }
+
+        /* Daily Report Section */
+        #report-section { background: var(--bg-card); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 30px; }
+        .report-header { font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0 0 15px 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .report-list { list-style: none; padding: 0; margin: 0 0 15px 0; max-height: 250px; overflow-y: auto; }
+        .report-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #374151; font-family: monospace; font-size: 13px; }
+        .report-item:last-child { border-bottom: none; }
+        .report-item.pass { color: var(--pass-color); }
+        .report-item.fail { color: var(--fail-color); }
+        .report-empty { text-align: center; color: var(--text-muted); font-style: italic; padding: 10px; }
+        
+        .report-actions { display: flex; gap: 10px; }
+        .share-btn { flex: 2; padding: 12px; background: var(--accent-blue); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
+        .clear-btn { flex: 1; padding: 12px; background: #991b1b; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; text-transform: uppercase; }
 
         /* Spec Modal & Liability Modal */
         #spec-modal, #liability-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); padding: 20px; align-items: center; justify-content: center; z-index: 50; }
@@ -292,7 +309,22 @@
     <div id="results-container">
         <h3 id="results-title"></h3>
         <div id="results-log"></div>
-        <button class="export-btn" id="ui-export-btn" onclick="exportToSpreadsheet()">📋 COPY SPREADSHEET DATA</button>
+        <div class="action-group">
+            <button class="export-btn" id="ui-export-btn" onclick="exportToSpreadsheet()">📋 COPY DATA</button>
+            <button class="save-btn" id="ui-save-btn" onclick="saveCurrentCheck()">💾 SAVE CHECK</button>
+        </div>
+    </div>
+
+    <!-- Daily Report Section -->
+    <div id="report-section">
+        <h3 class="report-header" id="ui-report-title">Daily Validation Report</h3>
+        <ul class="report-list" id="report-list">
+            <!-- Populated by JS -->
+        </ul>
+        <div class="report-actions">
+            <button class="share-btn" id="ui-share-btn" onclick="shareDailyReport()">📤 SHARE DAILY REPORT</button>
+            <button class="clear-btn" id="ui-clear-btn" onclick="clearDailyReport()">🗑️ CLEAR</button>
+        </div>
     </div>
 
 </div>
@@ -345,6 +377,7 @@
     const PIPE_SIZES = [15, 18, 24, 30, 36, 42, 48, 54, 60, 72];
     
     // As = { s: single cage, i: inner cage, o: outer cage }. 'null' means ASTM spec doesn't allow it.
+    // 30" Class V updated with plant standard 0.24 for outer cage.
     const ASTM_C76 = {
         15: {
             min_vertical: 12,
@@ -434,14 +467,20 @@
             kbClr: "CLR", kbSpc: "SPC", kbDone: "DONE",
             placeholderOpt: "Optional",
             
-            // New Liability Modal Strings
+            // Liability Modal Strings
             liabilityTitle: "TERMS OF USE & LIABILITY DISCLAIMER",
             liabilityDesc: "The Arbiter Engine and all associated calculations are provided for informational and preliminary quality control purposes only. This application does not replace the requirement for stamped, certified engineering drawings, official plant specifications, or the professional judgment of a licensed Professional Engineer (PE).<br><br>This software is provided 'AS-IS' without warranty of any kind, express or implied. By using this application, the user assumes all risks. The developer shall not be held liable for any structural failures, manufacturing defects, material waste, financial losses, or damages arising from the use of or reliance on these calculations. Always verify measurements against official ASTM C76 documentation.",
             liabilityAccept: "I ACCEPT",
             
-            // New Export Strings
-            exportBtn: "📋 COPY SPREADSHEET DATA",
-            exportCopied: "✅ COPIED TO CLIPBOARD!",
+            // Buttons & Reports
+            exportBtn: "📋 COPY DATA",
+            exportCopied: "✅ COPIED!",
+            btnSaveCheck: "💾 SAVE CHECK",
+            btnSaveCheckDone: "✅ SAVED!",
+            btnShareReport: "📤 SHARE DAILY REPORT",
+            btnClearReport: "🗑️ CLEAR",
+            reportTitle: "Daily Validation Report",
+            txtEmpty: "No checks saved today.",
 
             // Arbiter Outputs
             errInvalidTitle: "Invalid Selection",
@@ -497,14 +536,20 @@
             kbClr: "BORR", kbSpc: "ESP", kbDone: "LISTO",
             placeholderOpt: "Opcional",
             
-            // New Liability Modal Strings
+            // Liability Modal Strings
             liabilityTitle: "TÉRMINOS DE USO Y DESCARGO DE RESPONSABILIDAD",
             liabilityDesc: "El Motor Arbiter y todos los cálculos asociados se proporcionan únicamente con fines informativos y de control de calidad preliminar. Esta aplicación no reemplaza el requisito de planos de ingeniería certificados y sellados, especificaciones oficiales de la planta o el juicio profesional de un Ingeniero Profesional (PE) con licencia.<br><br>Este software se proporciona 'TAL CUAL' sin garantía de ningún tipo, expresa o implícita. Al usar esta aplicación, el usuario asume todos los riesgos. El desarrollador no será responsable de ninguna falla estructural, defecto de fabricación, desperdicio de material, pérdida financiera o daño que surja del uso o la dependencia de estos cálculos. Verifique siempre las medidas contra la documentación oficial de ASTM C76.",
             liabilityAccept: "ACEPTO",
 
-            // New Export Strings
-            exportBtn: "📋 COPIAR DATOS PARA HOJA DE CÁLCULO",
-            exportCopied: "✅ ¡COPIADO AL PORTAPAPELES!",
+            // Buttons & Reports
+            exportBtn: "📋 COPIAR DATOS",
+            exportCopied: "✅ ¡COPIADO!",
+            btnSaveCheck: "💾 GUARDAR CHEQUEO",
+            btnSaveCheckDone: "✅ ¡GUARDADO!",
+            btnShareReport: "📤 COMPARTIR REPORTE",
+            btnClearReport: "🗑️ BORRAR",
+            reportTitle: "Reporte de Validación Diario",
+            txtEmpty: "No hay chequeos guardados hoy.",
 
             // Arbiter Outputs
             errInvalidTitle: "Selección Inválida",
@@ -596,14 +641,20 @@
         document.getElementById('liab-desc').innerHTML = d.liabilityDesc;
         document.getElementById('liab-accept-btn').innerText = d.liabilityAccept;
 
-        // Export Button Translations
+        // Button Translations
         document.getElementById('ui-export-btn').innerText = d.exportBtn;
+        document.getElementById('ui-save-btn').innerText = d.btnSaveCheck;
+        document.getElementById('ui-share-btn').innerText = d.btnShareReport;
+        document.getElementById('ui-clear-btn').innerText = d.btnClearReport;
+        document.getElementById('ui-report-title').innerText = d.reportTitle;
         
         // If HUD is active, update its label text
         if(activeInputId) {
             let uiLabelId = document.getElementById(`card-${activeInputId}`).getAttribute('onclick').split("'")[3];
             document.getElementById('keyboard-display-label').innerText = document.getElementById(uiLabelId).innerText;
         }
+
+        renderDailyReport();
 
         // Re-run Arbiter quietly if there are results visible so they translate
         if (document.getElementById('results-container').style.display === 'block') {
@@ -631,6 +682,95 @@
     let selectedClass = 'III';
     let activeCage = 's'; // 's', 'i', 'o'
     let activeInputId = null;
+    let currentValidationRecord = null; // Holds the latest run data
+
+    // ==========================================
+    // DAILY REPORT LOGIC (SHARE & SAVE)
+    // ==========================================
+    function getDailyChecks() {
+        return JSON.parse(localStorage.getItem('arbiter_daily_checks')) || [];
+    }
+
+    function saveDailyChecks(checks) {
+        localStorage.setItem('arbiter_daily_checks', JSON.stringify(checks));
+    }
+
+    function renderDailyReport() {
+        const checks = getDailyChecks();
+        const listContainer = document.getElementById('report-list');
+        const d = langDict[currentLang];
+        listContainer.innerHTML = '';
+
+        if (checks.length === 0) {
+            listContainer.innerHTML = `<li class="report-empty">${d.txtEmpty}</li>`;
+            return;
+        }
+
+        checks.forEach(check => {
+            const li = document.createElement('li');
+            li.className = `report-item ${check.status === 'PASS' ? 'pass' : 'fail'}`;
+            li.innerHTML = `<span>[${check.time}] ${check.size}" W-${check.wall} CL-${check.cls} (${check.cage})</span> <span>${check.status}</span>`;
+            listContainer.appendChild(li);
+        });
+    }
+
+    function saveCurrentCheck() {
+        if (!currentValidationRecord) return;
+        
+        const checks = getDailyChecks();
+        checks.push(currentValidationRecord);
+        saveDailyChecks(checks);
+        
+        const btn = document.getElementById('ui-save-btn');
+        const originalText = langDict[currentLang].btnSaveCheck;
+        btn.innerText = langDict[currentLang].btnSaveCheckDone;
+        
+        renderDailyReport();
+
+        setTimeout(() => {
+            btn.innerText = originalText;
+        }, 2000);
+    }
+
+    function clearDailyReport() {
+        if (confirm("Are you sure you want to clear today's report?")) {
+            localStorage.removeItem('arbiter_daily_checks');
+            renderDailyReport();
+        }
+    }
+
+    function shareDailyReport() {
+        const checks = getDailyChecks();
+        const d = langDict[currentLang];
+        
+        if (checks.length === 0) {
+            alert(d.txtEmpty);
+            return;
+        }
+
+        const dateStr = new Date().toLocaleDateString();
+        let reportText = `${d.reportTitle} - ${dateStr}\n\n`;
+        
+        checks.forEach((check, index) => {
+            reportText += `${index + 1}. [${check.time}] ${check.size}" Wall-${check.wall} Class-${check.cls} (${check.cage}) | Status: ${check.status}\n`;
+        });
+        
+        reportText += "\n--\nGenerated by Arbiter Engine";
+
+        if (navigator.share) {
+            navigator.share({
+                title: `${d.reportTitle} - ${dateStr}`,
+                text: reportText,
+            }).catch(err => {
+                console.log("Error sharing:", err);
+            });
+        } else {
+            // Fallback for desktop or non-supported browsers
+            navigator.clipboard.writeText(reportText).then(() => {
+                alert(d.exportCopied + " (Share API not supported on this device, copied to clipboard instead)");
+            });
+        }
+    }
 
     // ==========================================
     // INITIALIZATION & UI
@@ -1053,6 +1193,21 @@
         }
         
         resultsLog.innerHTML = checksHTML;
+
+        // Save Current Run State for Reporting
+        const now = new Date();
+        currentValidationRecord = {
+            time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            size: selectedSize,
+            wall: selectedWall,
+            cls: selectedClass,
+            cage: cageName,
+            status: passedAll ? 'PASS' : 'FAIL'
+        };
+
+        // Reset Save button UI if they run a new validation
+        document.getElementById('ui-save-btn').innerText = d.btnSaveCheck;
+
         console.log(`[ARBITER] Execution complete. Status: ${passedAll ? 'PASSED' : 'FAILED'}`);
     }
 
