@@ -517,6 +517,8 @@
             
             // Buttons & Reports
             exportBtn: "💾 DOWNLOAD SPREADSHEET",
+            exportCopied: "✅ COPIED!",
+            exportDownloaded: "✅ DOWNLOADED!",
             btnSaveCheck: "💾 SAVE CHECK",
             btnSaveCheckDone: "✅ SAVED!",
             btnShareReport: "📤 SHARE DAILY REPORT",
@@ -599,6 +601,8 @@
 
             // Buttons & Reports
             exportBtn: "💾 DESCARGAR HOJA DE CÁLCULO",
+            exportCopied: "✅ ¡COPIADO!",
+            exportDownloaded: "✅ ¡DESCARGADO!",
             btnSaveCheck: "💾 GUARDAR CHEQUEO",
             btnSaveCheckDone: "✅ ¡GUARDADO!",
             btnShareReport: "📤 COMPARTIR REPORTE",
@@ -1001,6 +1005,17 @@
         const csvData = header + "\n" + row;
         
         triggerDownload(csvData, `QC_Validation_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+        
+        const btn = document.getElementById('ui-export-btn');
+        const originalText = btn.innerText;
+        btn.innerText = d.exportDownloaded;
+        btn.style.backgroundColor = "var(--pass-color)";
+        btn.style.color = "#000";
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.backgroundColor = "var(--bg-input)";
+            btn.style.color = "white";
+        }, 2500);
     }
 
     function downloadProdSpreadsheet() {
@@ -1029,6 +1044,17 @@
         
         const csvData = header + "\n" + rows.join("\n");
         triggerDownload(csvData, `Daily_Production_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+        
+        const btn = document.getElementById('ui-prod-export-btn');
+        const originalText = btn.innerText;
+        btn.innerText = d.exportDownloaded;
+        btn.style.backgroundColor = "var(--pass-color)";
+        btn.style.color = "#000";
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.backgroundColor = "var(--bg-input)";
+            btn.style.color = "white";
+        }, 2500);
     }
 
     // Native file download generator
@@ -1209,6 +1235,25 @@
         if (!activeInputId) return;
         document.getElementById(activeInputId).value = "";
         document.getElementById('keyboard-display').innerText = "";
+    }
+
+    // ==========================================
+    // FRACTION PARSER UTILITY
+    // ==========================================
+    function parseMeasurement(val) {
+        if (!val) return 0;
+        val = val.toString().trim();
+        if (val.includes(' ')) {
+            let parts = val.split(' ');
+            let whole = parseFloat(parts[0]);
+            let fracParts = parts[1].split('/');
+            if (fracParts.length === 2) return whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
+            return whole;
+        } else if (val.includes('/')) {
+            let parts = val.split('/');
+            return parseFloat(parts[0]) / parseFloat(parts[1]);
+        }
+        return parseFloat(val) || 0;
     }
 
     // ==========================================
