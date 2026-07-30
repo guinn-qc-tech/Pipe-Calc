@@ -339,7 +339,7 @@
             <h3 id="results-title"></h3>
             <div id="results-log"></div>
             <div class="action-group">
-                <button class="export-btn" id="ui-export-btn" onclick="exportToSpreadsheet()">📋 COPY DATA</button>
+                <button class="export-btn" id="ui-export-btn" onclick="downloadQCSpreadsheet()">💾 DOWNLOAD SPREADSHEET</button>
                 <button class="save-btn" id="ui-save-btn" onclick="saveCurrentCheck()">💾 SAVE CHECK</button>
             </div>
         </div>
@@ -363,7 +363,7 @@
         <div id="prod-list-container">
             <!-- Populated by JS -->
         </div>
-        <button class="export-btn" id="ui-prod-export-btn" onclick="exportProductionToSpreadsheet()" style="margin-top: 20px; width: 100%;">📋 COPY PROD DATA</button>
+        <button class="export-btn" id="ui-prod-export-btn" onclick="downloadProdSpreadsheet()" style="margin-top: 20px; width: 100%;">💾 DOWNLOAD PROD SPREADSHEET</button>
     </div>
 
 </div>
@@ -516,8 +516,7 @@
             liabilityAccept: "I ACCEPT",
             
             // Buttons & Reports
-            exportBtn: "📋 COPY DATA",
-            exportCopied: "✅ COPIED!",
+            exportBtn: "💾 DOWNLOAD SPREADSHEET",
             btnSaveCheck: "💾 SAVE CHECK",
             btnSaveCheckDone: "✅ SAVED!",
             btnShareReport: "📤 SHARE DAILY REPORT",
@@ -529,7 +528,7 @@
             prodTitle: "Daily Production & Culls",
             prodMade: "Total Made",
             prodCullBtn: "ADD",
-            prodExportBtn: "📋 COPY PROD DATA",
+            prodExportBtn: "💾 DOWNLOAD PROD SPREADSHEET",
             cull25: "25% (Started)",
             cull50: "50% (Half)",
             cull75: "75% (Most)",
@@ -599,8 +598,7 @@
             liabilityAccept: "ACEPTO",
 
             // Buttons & Reports
-            exportBtn: "📋 COPIAR DATOS",
-            exportCopied: "✅ ¡COPIADO!",
+            exportBtn: "💾 DESCARGAR HOJA DE CÁLCULO",
             btnSaveCheck: "💾 GUARDAR CHEQUEO",
             btnSaveCheckDone: "✅ ¡GUARDADO!",
             btnShareReport: "📤 COMPARTIR REPORTE",
@@ -612,7 +610,7 @@
             prodTitle: "Producción Diaria y Desechos",
             prodMade: "Total Fabricado",
             prodCullBtn: "AGREGAR",
-            prodExportBtn: "📋 COPIAR DATOS PROD",
+            prodExportBtn: "💾 DESCARGAR HOJA PROD",
             cull25: "25% (Iniciado)",
             cull50: "50% (Mitad)",
             cull75: "75% (Mayoría)",
@@ -836,6 +834,9 @@
             localStorage.removeItem('arbiter_daily_checks');
             localStorage.removeItem('arbiter_production_data');
             renderDailyReport();
+            if (document.getElementById('prod-view').style.display === 'block') {
+                renderProduction();
+            }
         }
     }
 
@@ -974,7 +975,35 @@
         }
     }
 
-    function exportProductionToSpreadsheet() {
+    // ==========================================
+    // SPREADSHEET FILE GENERATION (CSV)
+    // ==========================================
+    function downloadQCSpreadsheet() {
+        const d = langDict[currentLang];
+        let cageName = activeCage === 's' ? 'Single' : (activeCage === 'i' ? 'Inner' : 'Outer');
+        
+        // Gather values safely
+        const size = selectedSize || "0";
+        const wall = selectedWall || "N/A";
+        const cls = selectedClass || "N/A";
+        const wDia = document.getElementById('wireDia').value || "0";
+        const pitch = document.getElementById('pitch').value || "0";
+        const cOD = document.getElementById('cageOD').value || "0";
+        const cLen = document.getElementById('cageLength').value || "0";
+        const vDia = document.getElementById('vertDia').value || "0";
+        const vCount = document.getElementById('vertCount').value || "0";
+        const bOD = document.getElementById('bellOD').value || "N/A";
+        const bLen = document.getElementById('bellLength').value || "N/A";
+        
+        // Format as standard CSV (Comma Separated Values)
+        const header = "Size,Wall,Class,Cage,Wire Dia,Pitch,Cage OD,Height,Vert Dia,Vert Count,Bell OD,Bell Height";
+        const row = `"${size}""","${wall}","${cls}","${cageName}","${wDia}","${pitch}","${cOD}","${cLen}","${vDia}","${vCount}","${bOD}","${bLen}"`;
+        const csvData = header + "\n" + row;
+        
+        triggerDownload(csvData, `QC_Validation_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+    }
+
+    function downloadProdSpreadsheet() {
         const d = langDict[currentLang];
         let prodData = JSON.parse(localStorage.getItem('arbiter_production_data')) || {};
         const keys = Object.keys(prodData);
@@ -984,37 +1013,37 @@
             return; 
         }
         
-        let header = "Size\tWall\tClass\tCage\tTotal Made\tTotal Culls (Count)\tEquivalent Cull Qty\tCull Breakdown";
+        let header = "Size,Wall,Class,Cage,Total Made,Total Culls (Count),Equivalent Cull Qty,Cull Breakdown";
         let rows = [];
         
         keys.forEach(k => {
             let p = prodData[k];
             let cullCount = p.culls.length;
             let equivCulls = p.culls.reduce((sum, val) => sum + (val / 100), 0);
-            let breakdown = p.culls.length > 0 ? p.culls.map(c => c + "%").join(", ") : "None";
             
-            rows.push(`${p.size}"\t${p.wall}\t${p.cls}\t${p.cage}\t${p.made}\t${cullCount}\t${equivCulls.toFixed(2)}\t${breakdown}`);
+            // Wrap breakdown in quotes so internal commas don't break the CSV columns
+            let breakdown = p.culls.length > 0 ? `"${p.culls.map(c => c + "%").join(", ")}"` : "None";
+            
+            rows.push(`"${p.size}""","${p.wall}","${p.cls}","${p.cage}","${p.made}","${cullCount}","${equivCulls.toFixed(2)}",${breakdown}`);
         });
         
-        const tsvData = header + "\n" + rows.join("\n");
+        const csvData = header + "\n" + rows.join("\n");
+        triggerDownload(csvData, `Daily_Production_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+    }
+
+    // Native file download generator
+    function triggerDownload(csvContent, fileName) {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
         
-        navigator.clipboard.writeText(tsvData).then(() => {
-            const btn = document.getElementById('ui-prod-export-btn');
-            const originalText = btn.innerText;
-            
-            btn.innerText = d.exportCopied;
-            btn.style.backgroundColor = "var(--pass-color)";
-            btn.style.color = "#000";
-            
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.backgroundColor = "var(--bg-input)";
-                btn.style.color = "white";
-            }, 2500);
-        }).catch(err => {
-            console.error("[ARBITER] Clipboard export failed:", err);
-            alert("Error exporting to clipboard.");
-        });
+        link.setAttribute("href", url);
+        link.setAttribute("download", fileName);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // ==========================================
@@ -1078,7 +1107,7 @@
     function enforceCageLogic() {
         const classData = ASTM_C76[selectedSize][selectedWall][selectedClass];
         
-        // If the combo isn't in ASTM C76 at all, logic locks out the toggles.
+        // If the combo isnt in ASTM C76 at all, logic locks out the toggles.
         if (!classData) {
             updateCageToggles();
             return;
@@ -1180,73 +1209,6 @@
         if (!activeInputId) return;
         document.getElementById(activeInputId).value = "";
         document.getElementById('keyboard-display').innerText = "";
-    }
-
-    // ==========================================
-    // FRACTION PARSER UTILITY
-    // ==========================================
-    function parseMeasurement(val) {
-        if (!val) return 0;
-        val = val.toString().trim();
-        if (val.includes(' ')) {
-            let parts = val.split(' ');
-            let whole = parseFloat(parts[0]);
-            let fracParts = parts[1].split('/');
-            if (fracParts.length === 2) return whole + (parseFloat(fracParts[0]) / parseFloat(fracParts[1]));
-            return whole;
-        } else if (val.includes('/')) {
-            let parts = val.split('/');
-            return parseFloat(parts[0]) / parseFloat(parts[1]);
-        }
-        return parseFloat(val) || 0;
-    }
-
-    // ==========================================
-    // SPREADSHEET EXPORT ENGINE (QC TAB)
-    // ==========================================
-    function exportToSpreadsheet() {
-        const d = langDict[currentLang];
-        let cageName = activeCage === 's' ? 'Single' : (activeCage === 'i' ? 'Inner' : 'Outer');
-        
-        // Gather values safely
-        const size = selectedSize || "0";
-        const wall = selectedWall || "N/A";
-        const cls = selectedClass || "N/A";
-        const wDia = document.getElementById('wireDia').value || "0";
-        const pitch = document.getElementById('pitch').value || "0";
-        const cOD = document.getElementById('cageOD').value || "0";
-        const cLen = document.getElementById('cageLength').value || "0";
-        const vDia = document.getElementById('vertDia').value || "0";
-        const vCount = document.getElementById('vertCount').value || "0";
-        const bOD = document.getElementById('bellOD').value || "N/A";
-        const bLen = document.getElementById('bellLength').value || "N/A";
-        
-        // Format as Tab-Separated Values (TSV) for seamless Excel/Sheets paste
-        const header = "Size\tWall\tClass\tCage\tWire Dia\tPitch\tCage OD\tHeight\tVert Dia\tVert Count\tBell OD\tBell Height";
-        const row = `${size}"\t${wall}\t${cls}\t${cageName}\t${wDia}\t${pitch}\t${cOD}\t${cLen}\t${vDia}\t${vCount}\t${bOD}\t${bLen}`;
-        
-        const tsvData = `${header}\n${row}`;
-        
-        // Push to Clipboard API
-        navigator.clipboard.writeText(tsvData).then(() => {
-            const btn = document.getElementById('ui-export-btn');
-            const originalText = btn.innerText;
-            
-            // Visual feedback
-            btn.innerText = d.exportCopied;
-            btn.style.backgroundColor = "var(--pass-color)";
-            btn.style.color = "#000";
-            
-            // Reset after 2.5 seconds
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.style.backgroundColor = "var(--bg-input)";
-                btn.style.color = "white";
-            }, 2500);
-        }).catch(err => {
-            console.error("[ARBITER] Clipboard export failed:", err);
-            alert("Error exporting to clipboard. Please check browser permissions.");
-        });
     }
 
     // ==========================================
