@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Steel Calculator (RCP / PyScript)</title>
+    
+    <!-- PyScript Core Requirements -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    
+    <style>
+        /*
+        =============================================================================
+          _____ _______ ______ ______ _         _____          _      _____ 
+         / ____|__   __|  ____|  ____| |       / ____|   /\   | |    / ____|
+        | (___    | |  | |__  | |__  | |      | |       /  \  | |   | |     
+         \___ \   | |  |  __| |  __| | |      | |      / /\ \ | |   | |     
+         ____) |  | |  | |____| |____| |____  | |____ / ____ \| |___| |____ 
+        |_____/   |_|  |______|______|______|  \_____/_/    \_\______\_____|
+                                                                            
+        =============================================================================
+        */
+        :root {
+            --bg-color: #1e1e2e;
+            --calc-bg: #11111b;
+            --screen-bg: #181825;
+            --key-bg: #313244;
+            --key-hover: #45475a;
+            --text: #cdd6f4;
+            --accent: #89b4fa;
+            --danger: #f38ba8;
+            --success: #a6e3a1;
+            --warning: #f9e2af;
+            --active-border: #a6e3a1;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .calculator {
+            background: var(--calc-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .screen {
+            background: var(--screen-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 2px solid var(--key-bg);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: #a6adc8;
+            margin-bottom: 4px;
+            font-family: monospace;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            background: #11111b;
+            border: 2px solid transparent;
+            color: var(--text);
+            font-size: 1.5rem;
+            text-align: right;
+            outline: none;
+            box-sizing: border-box;
+            font-family: monospace;
+            padding: 8px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        input[type="text"].active {
+            border-color: var(--active-border);
+            box-shadow: 0 0 5px rgba(166, 227, 161, 0.3);
+        }
+
+        .result {
+            text-align: right;
+            color: var(--accent);
+            font-size: 1.2rem;
+            min-height: 3em;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-line;
+            border-top: 1px dashed var(--key-bg);
+            padding-top: 10px;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            background: var(--key-bg);
+            color: var(--text);
+            border: none;
+            padding: 20px;
+            font-size: 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button:hover {
+            background: var(--key-hover);
+        }
+
+        .col-span-2 { grid-column: span 2; }
+        .col-span-3 { grid-column: span 3; }
+        .col-span-4 { grid-column: span 4; }
+        
+        .btn-action { background: var(--accent); color: #11111b; font-weight: bold; }
+        .btn-action:hover { background: #74c7ec; }
+        
+        .btn-danger { background: var(--danger); color: #11111b; font-weight: bold; }
+        .btn-danger:hover { background: #eba0ac; }
+        
+        .btn-success { background: var(--success); color: #11111b; font-weight: bold; font-size: 1.2rem; }
+        .btn-success:hover { background: #94e2d5; }
+
+        .btn-warning { background: var(--warning); color: #11111b; font-weight: bold; }
+        .btn-warning:hover { background: #f3cc83; }
+
+        .log-container {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            background: #11111b;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #a6adc8;
+            height: 150px;
+            overflow-y: auto;
+            border: 1px solid var(--key-bg);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>RCP Steel Calculator</h2>
+        <p>Tap a field to activate, then use keypad.</p>
+    </div>
+
+    <div class="calculator">
+        <div class="screen">
+            <div class="input-group">
+                <label>Wire Diameter 'd' (in):</label>
+                <input type="text" id="calc-display-d" class="active" py-click="set_active_d" readonly placeholder="e.g., 5/8">
+            </div>
+            
+            <div class="input-group">
+                <label>Spacing 'c' (in):</label>
+                <input type="text" id="calc-display-c" py-click="set_active_c" readonly placeholder="e.g., 2">
+            </div>
+
+            <div id="result-display" class="result">Result Sq In / ft</div>
+        </div>
+
+        <div class="keypad">
+            <button py-click="append_char" data-val="7">7</button>
+            <button py-click="append_char" data-val="8">8</button>
+            <button py-click="append_char" data-val="9">9</button>
+            <button py-click="append_char" data-val="/" class="btn-warning">/</button>
+
+            <button py-click="append_char" data-val="4">4</button>
+            <button py-click="append_char" data-val="5">5</button>
+            <button py-click="append_char" data-val="6">6</button>
+            <button py-click="append_char" data-val=" " class="btn-warning">Space</button>
+
+            <button py-click="append_char" data-val="1">1</button>
+            <button py-click="append_char" data-val="2">2</button>
+            <button py-click="append_char" data-val="3">3</button>
+            <button py-click="backspace" class="btn-action">⌫</button>
+
+            <button py-click="append_char" data-val="0" class="col-span-2">0</button>
+            <button py-click="clear_display" class="btn-danger">C</button>
+            <button py-click="calculate_steel_area" class="btn-success col-span-4">Calculate Area (sq in / ft)</button>
+        </div>
+    </div>
+
+    <div id="debug-log" class="log-container">
+        <div>[SYSTEM STARTUP] Awaiting input...</div>
+    </div>
+
+    <py-script>
+        import math
+        from pyscript import document
+
+        # Global state for keypad targeting
+        active_field = "calc-display-d"
+
+        # =============================================================================
+        #  VERBOSE LOGGING SYSTEM
+        # =============================================================================
+        def debug_log(message):
+            """Appends verbose execution logs to the UI console for QC."""
+            print(f"[DEBUG LOG] {message}")
+            log_container = document.querySelector("#debug-log")
+            if log_container:
+                new_log = document.createElement("div")
+                new_log.innerText = f"> {message}"
+                log_container.appendChild(new_log)
+                log_container.scrollTop = log_container.scrollHeight
+
+        # =============================================================================
+        #  ARBITER VALIDATION LOGIC (PHYSICAL ANCHORING)
+        # =============================================================================
+        def arbiter_validation(diameter, spacing):
+            """
+            Checks physical laws against calculation parameters.
+            Missing this validation step compromises As-Built integrity.
+            """
+            debug_log("[ARBITER] Initiating validation of physical parameters...")
+            
+            if diameter <= 0:
+                debug_log("[ARBITER FAIL] Law violation: Wire diameter must be greater than zero.")
+                return False
+                
+            if spacing <= 0:
+                debug_log("[ARBITER FAIL] Law violation: Spacing 'c' must be greater than zero.")
+                return False
+                
+            debug_log("[ARBITER PASS] Parameters conform to physical bounds.")
+            return True
+
+        # =============================================================================
+        #  CALCULATOR LOGIC
+        # =============================================================================
+        def parse_fractional_input(input_str):
+            """Parses strings like '5/8' or '1 1/2' into float decimals."""
+            debug_log(f"Received raw input string: '{input_str}'")
+            if not input_str or input_str.strip() == "":
+                return 0.0
+                
+            parts = input_str.strip().split(" ")
+            total_decimal = 0.0
+            
+            for part in parts:
+                if "/" in part:
+                    try:
+                        num, den = part.split("/")
+                        num_f = float(num)
+                        den_f = float(den)
+                        if den_f == 0:
+                            debug_log("CRITICAL: Division by zero attempted in fraction.")
+                            return -1.0
+                        total_decimal += (num_f / den_f)
+                        debug_log(f"Parsed fraction component [{part}] -> {num_f / den_f}")
+                    except ValueError as e:
+                        debug_log(f"ValueError parsing fraction component [{part}]: {e}")
+                else:
+                    try:
+                        total_decimal += float(part)
+                        debug_log(f"Parsed integer component [{part}] -> {float(part)}")
+                    except ValueError as e:
+                        debug_log(f"ValueError parsing number component [{part}]: {e}")
+                        
+            debug_log(f"Total parsed decimal value resolved to: {total_decimal}")
+            return total_decimal
+
+        def calculate_steel_area(event):
+            """Executes area calculation based on 12/c spacing factor."""
+            debug_log("--- NEW AREA CALCULATION TRIGGERED ---")
+            
+            d_input = document.querySelector("#calc-display-d").value
+            c_input = document.querySelector("#calc-display-c").value
+            result_element = document.querySelector("#result-display")
+            
+            diameter = parse_fractional_input(d_input)
+            spacing = parse_fractional_input(c_input)
+            
+            # Physical anchoring check before proceeding
+            if not arbiter_validation(diameter, spacing):
+                result_element.innerHTML = "Error: ARBITER VALIDATION FAILED<br>Check Zero Values"
+                return
+                
+            # A_s = (12 / c) * pi * (d / 2)^2
+            radius = diameter / 2.0
+            wire_area = math.pi * (radius ** 2)
+            
+            wires_per_foot = 12.0 / spacing
+            total_area_per_foot = wires_per_foot * wire_area
+            
+            debug_log(f"Executing: wire_area = math.pi * ({radius} ** 2)")
+            debug_log(f"Executing: wires_per_foot = 12.0 / {spacing}")
+            debug_log(f"Calculated Total Area: {total_area_per_foot} sq in/ft")
+            
+            # Format output for precision QC checks
+            result_element.innerHTML = f"Wires / ft: {wires_per_foot:.2f}\nArea: {total_area_per_foot:.4f} sq in/ft"
+
+        # =============================================================================
+        #  UI EVENT HANDLERS
+        # =============================================================================
+        def set_active_d(event):
+            global active_field
+            active_field = "calc-display-d"
+            document.querySelector("#calc-display-d").classList.add("active")
+            document.querySelector("#calc-display-c").classList.remove("active")
+            debug_log("Active field locked to: Diameter")
+
+        def set_active_c(event):
+            global active_field
+            active_field = "calc-display-c"
+            document.querySelector("#calc-display-c").classList.add("active")
+            document.querySelector("#calc-display-d").classList.remove("active")
+            debug_log("Active field locked to: Spacing")
+
+        def append_char(event):
+            """Appends keypad value to the currently active display."""
+            char = event.target.getAttribute("data-val")
+            debug_log(f"Keypad input registered: '{char}' -> {active_field}")
+            
+            display = document.querySelector(f"#{active_field}")
+            if char == " " and (not display.value or display.value[-1] == " "):
+                debug_log("Prevented double space or leading space insertion.")
+                return
+                
+            display.value += char
+
+        def clear_display(event):
+            """Purges calculation memory for both inputs."""
+            debug_log("Clear display command triggered. Purging all inputs.")
+            document.querySelector("#calc-display-d").value = ""
+            document.querySelector("#calc-display-c").value = ""
+            document.querySelector("#result-display").innerHTML = "Result Sq In / ft"
+            
+        def backspace(event):
+            """Removes trailing character from active input string."""
+            debug_log(f"Backspace command triggered on {active_field}.")
+            display = document.querySelector(f"#{active_field}")
+            display.value = display.value[:-1]
+
+    </py-script>
+</body>
+</html>
