@@ -186,12 +186,12 @@
         <div class="screen">
             <div class="input-group">
                 <label>Wire Diameter 'd' (in):</label>
-                <input type="text" id="calc-display-d" class="active" py-click="set_active_d" readonly placeholder="e.g., 5/8">
+                <input type="text" id="calc-display-d" class="active" py-click="set_active_d" readonly placeholder="e.g., 5/8 or 0.625">
             </div>
             
             <div class="input-group">
                 <label>Spacing 'c' (in):</label>
-                <input type="text" id="calc-display-c" py-click="set_active_c" readonly placeholder="e.g., 2">
+                <input type="text" id="calc-display-c" py-click="set_active_c" readonly placeholder="e.g., 2 or 2.5">
             </div>
 
             <div id="result-display" class="result">Result Sq In / ft</div>
@@ -214,6 +214,7 @@
             <button py-click="backspace" class="btn-action">⌫</button>
 
             <button py-click="append_char" data-val="0" class="col-span-2">0</button>
+            <button py-click="append_char" data-val="." class="btn-warning">.</button>
             <button py-click="clear_display" class="btn-danger">C</button>
             <button py-click="calculate_steel_area" class="btn-success col-span-4">Calculate Area (sq in / ft)</button>
         </div>
@@ -268,7 +269,7 @@
         #  CALCULATOR LOGIC
         # =============================================================================
         def parse_fractional_input(input_str):
-            """Parses strings like '5/8' or '1 1/2' into float decimals."""
+            """Parses strings like '5/8', '1 1/2', or '0.625' into float decimals."""
             debug_log(f"Received raw input string: '{input_str}'")
             if not input_str or input_str.strip() == "":
                 return 0.0
@@ -292,7 +293,7 @@
                 else:
                     try:
                         total_decimal += float(part)
-                        debug_log(f"Parsed integer component [{part}] -> {float(part)}")
+                        debug_log(f"Parsed numeric/decimal component [{part}] -> {float(part)}")
                     except ValueError as e:
                         debug_log(f"ValueError parsing number component [{part}]: {e}")
                         
@@ -352,10 +353,13 @@
             debug_log(f"Keypad input registered: '{char}' -> {active_field}")
             
             display = document.querySelector(f"#{active_field}")
+            
+            # Prevent multiple spaces
             if char == " " and (not display.value or display.value[-1] == " "):
                 debug_log("Prevented double space or leading space insertion.")
                 return
                 
+            # Allow input
             display.value += char
 
         def clear_display(event):
